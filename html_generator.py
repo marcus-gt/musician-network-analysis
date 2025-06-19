@@ -95,7 +95,7 @@ def get_html_template():
             gap: 20px;
             margin-bottom: 20px;
             flex-wrap: wrap;
-            align-items: center;
+            align-items: flex-end;
         }
         
         .control-group {
@@ -254,6 +254,24 @@ def get_html_template():
             font-size: 12px;
             color: #666;
             text-align: center;
+        }
+        
+        .reset-button {
+            padding: 8px 16px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            height: fit-content;
+            align-self: flex-end;
+            margin-left: auto;
+            transition: background-color 0.2s;
+        }
+        
+        .reset-button:hover {
+            background: #c82333;
         }
         
         .stats-panel {
@@ -477,7 +495,7 @@ def get_html_template():
                 </div>
             </div>
             
-            <button onclick="resetFilters()" style="padding: 8px 16px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">Reset Filters</button>
+            <button onclick="resetFilters()" class="reset-button">Reset Filters</button>
         </div>
         
         <div class="stats-panel" id="statsPanel">
