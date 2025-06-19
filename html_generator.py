@@ -274,6 +274,94 @@ def get_html_template():
             background: #c82333;
         }
         
+        .custom-filters-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .custom-filter-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .custom-filter-column {
+            min-width: 150px;
+            flex-shrink: 0;
+        }
+        
+        .custom-filter-column select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            height: 38px;
+            box-sizing: border-box;
+        }
+        
+        .custom-filter-values {
+            flex: 1;
+            min-width: 200px;
+            margin-right: 8px;
+        }
+        
+        .custom-filter-values .multi-select-input {
+            height: 38px;
+            box-sizing: border-box;
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+        
+        .custom-filter-remove {
+            padding: 8px 12px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            height: 38px;
+            min-width: 38px;
+            flex-shrink: 0;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .custom-filter-remove:hover {
+            background: #c82333;
+        }
+        
+        .add-filter-btn {
+            padding: 8px 12px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background-color 0.2s;
+        }
+        
+        .add-filter-btn:hover {
+            background: #218838;
+        }
+        
+        .custom-filter-label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        
         .stats-panel {
             background: #f8f9fa;
             padding: 15px;
@@ -479,7 +567,7 @@ def get_html_template():
                     <div id="roleDropdown" class="multi-select-dropdown">
                         <div class="multi-select-search">
                             <input type="text" id="roleSearchInput" placeholder="Search roles..." oninput="searchRoles()" onclick="event.stopPropagation()">
-                        </div>
+                    </div>
                         <div class="multi-select-controls">
                             <button class="multi-select-control-btn" onclick="selectAllRoles()">Select All</button>
                             <button class="multi-select-control-btn" onclick="deselectAllRoles()">Deselect All</button>
@@ -496,35 +584,11 @@ def get_html_template():
             </div>
             
             <div class="control-group">
-                <label for="customColumnFilter">Custom Filter:</label>
-                <select id="customColumnFilter" onchange="onCustomColumnChange()">
-                    <option value="">Select Column...</option>
-                </select>
-            </div>
-            
-            <div class="control-group" id="customValueFilterGroup" style="display: none;">
-                <label for="customValueFilter">Values:</label>
-                <div class="multi-select">
-                    <div class="multi-select-input" onclick="toggleCustomValueDropdown()">
-                        <span id="customValueFilterDisplay">All values selected</span>
-                        <span class="multi-select-arrow" id="customValueArrow">▼</span>
-                    </div>
-                    <div id="customValueDropdown" class="multi-select-dropdown">
-                        <div class="multi-select-search">
-                            <input type="text" id="customValueSearchInput" placeholder="Search values..." oninput="searchCustomValues()" onclick="event.stopPropagation()">
-                        </div>
-                        <div class="multi-select-controls">
-                            <button class="multi-select-control-btn" onclick="selectAllCustomValues()">Select All</button>
-                            <button class="multi-select-control-btn" onclick="deselectAllCustomValues()">Deselect All</button>
-                        </div>
-                        <div class="multi-select-options" id="customValueOptions">
-                            <!-- Custom value options will be populated here -->
-                        </div>
-                        <div class="multi-select-count" id="customValueCount">
-                            0 of 0 values selected
-                        </div>
-                    </div>
+                <label>Custom Filters:</label>
+                <div class="custom-filters-container" id="customFiltersContainer">
+                    <!-- Custom filters will be added here dynamically -->
                 </div>
+                <button class="add-filter-btn" onclick="addCustomFilter()">+ Add Custom Filter</button>
             </div>
             
             <button onclick="resetFilters()" class="reset-button">Reset Filters</button>
@@ -609,8 +673,8 @@ def get_html_template():
         let currentData = JSON.parse(JSON.stringify(fullNetworkData));
         let myChart;
         let selectedRoles = new Set();
-        let selectedCustomValues = new Set();
-        let currentCustomColumn = '';
+        let customFilters = []; // Array of custom filter objects
+        let nextCustomFilterId = 1;
         
         // Analysis data
         let musicianStatsData = {musician_stats_placeholder};
@@ -680,42 +744,13 @@ def get_javascript_functions():
         
         // Network tab functions
         function populateFilters() {
-            const genreFilter = document.getElementById('genreFilter');
-            const styleFilter = document.getElementById('styleFilter');
             const roleOptions = document.getElementById('roleOptions');
-            const customColumnFilter = document.getElementById('customColumnFilter');
             
             // Get unique values from full data
-            const genres = [...new Set(fullNetworkData.nodes.flatMap(node => node.genres || []))].sort();
-            const styles = [...new Set(fullNetworkData.nodes.flatMap(node => node.styles || []))].sort();
             const roles = [...new Set(fullNetworkData.links.flatMap(link => link.roles || []))].sort();
             
             // Store all roles globally for search functionality
             window.allRoles = roles;
-            
-            // Populate genre filter
-            genres.forEach(genre => {
-                const option = document.createElement('option');
-                option.value = genre;
-                option.textContent = genre;
-                genreFilter.appendChild(option);
-            });
-            
-            // Populate style filter
-            styles.forEach(style => {
-                const option = document.createElement('option');
-                option.value = style;
-                option.textContent = style;
-                styleFilter.appendChild(option);
-            });
-            
-            // Populate custom column filter
-            Object.keys(customFilterData).forEach(column => {
-                const option = document.createElement('option');
-                option.value = column;
-                option.textContent = column;
-                customColumnFilter.appendChild(option);
-            });
             
             // Populate role filter with enhanced structure
             populateRoleOptions(roles);
@@ -822,10 +857,10 @@ def get_javascript_functions():
                 checkbox.checked = selectedRoles.has(role);
                 
                 if (selectedRoles.has(role)) {
-                    option.classList.add('selected');
-                } else {
-                    option.classList.remove('selected');
-                }
+                        option.classList.add('selected');
+                    } else {
+                        option.classList.remove('selected');
+                    }
             });
         }
         
@@ -875,43 +910,195 @@ def get_javascript_functions():
                 document.getElementById('roleSearchInput').value = '';
                 searchRoles();
                 
-                // Also close custom value dropdown
-                const customDropdown = document.getElementById('customValueDropdown');
-                const customArrow = document.getElementById('customValueArrow');
-                if (customDropdown) {
-                    customDropdown.classList.remove('show');
-                    customArrow.classList.remove('open');
-                    const customSearchInput = document.getElementById('customValueSearchInput');
-                    if (customSearchInput) {
-                        customSearchInput.value = '';
-                        searchCustomValues();
+                // Also close any open custom filter dropdowns
+                customFilters.forEach(filter => {
+                    const customDropdown = document.getElementById(`customValueDropdown_${filter.id}`);
+                    const customArrow = document.getElementById(`customValueArrow_${filter.id}`);
+                    if (customDropdown) {
+                        customDropdown.classList.remove('show');
+                        customArrow.classList.remove('open');
+                        const customSearchInput = document.getElementById(`customValueSearchInput_${filter.id}`);
+                        if (customSearchInput) {
+                            customSearchInput.value = '';
+                            searchCustomValues(filter.id);
+                        }
                     }
-                }
+                });
             }
         });
         
-        // Custom filter functions
-        function onCustomColumnChange() {
-            const selectedColumn = document.getElementById('customColumnFilter').value;
-            const customValueGroup = document.getElementById('customValueFilterGroup');
+        // Multiple Custom Filter Functions
+        function addCustomFilter() {
+            const filterId = nextCustomFilterId++;
+            const filter = {
+                id: filterId,
+                column: '',
+                selectedValues: new Set()
+            };
+            
+            customFilters.push(filter);
+            createCustomFilterUI(filter);
+        }
+        
+        function createCustomFilterUI(filter) {
+            const container = document.getElementById('customFiltersContainer');
+            
+            const filterItem = document.createElement('div');
+            filterItem.className = 'custom-filter-item';
+            filterItem.id = `customFilter_${filter.id}`;
+            
+            // Column selector
+            const columnDiv = document.createElement('div');
+            columnDiv.className = 'custom-filter-column';
+            
+            const columnLabel = document.createElement('div');
+            columnLabel.className = 'custom-filter-label';
+            columnLabel.textContent = 'Column:';
+            
+            const columnSelect = document.createElement('select');
+            columnSelect.id = `customColumnSelect_${filter.id}`;
+            columnSelect.onchange = () => onCustomColumnChange(filter.id);
+            
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Select Column...';
+            columnSelect.appendChild(defaultOption);
+            
+            Object.keys(customFilterData).forEach(column => {
+                const option = document.createElement('option');
+                option.value = column;
+                option.textContent = column;
+                columnSelect.appendChild(option);
+            });
+            
+            columnDiv.appendChild(columnLabel);
+            columnDiv.appendChild(columnSelect);
+            
+            // Values selector
+            const valuesDiv = document.createElement('div');
+            valuesDiv.className = 'custom-filter-values';
+            valuesDiv.id = `customValuesDiv_${filter.id}`;
+            valuesDiv.style.display = 'none';
+            
+            const valuesLabel = document.createElement('div');
+            valuesLabel.className = 'custom-filter-label';
+            valuesLabel.textContent = 'Values:';
+            
+            const multiSelect = document.createElement('div');
+            multiSelect.className = 'multi-select';
+            
+            const multiSelectInput = document.createElement('div');
+            multiSelectInput.className = 'multi-select-input';
+            multiSelectInput.onclick = () => toggleCustomValueDropdown(filter.id);
+            
+            const displaySpan = document.createElement('span');
+            displaySpan.id = `customValueFilterDisplay_${filter.id}`;
+            displaySpan.textContent = 'All values selected';
+            
+            const arrowSpan = document.createElement('span');
+            arrowSpan.className = 'multi-select-arrow';
+            arrowSpan.id = `customValueArrow_${filter.id}`;
+            arrowSpan.textContent = '▼';
+            
+            multiSelectInput.appendChild(displaySpan);
+            multiSelectInput.appendChild(arrowSpan);
+            
+            const dropdown = document.createElement('div');
+            dropdown.className = 'multi-select-dropdown';
+            dropdown.id = `customValueDropdown_${filter.id}`;
+            
+            // Search section
+            const searchDiv = document.createElement('div');
+            searchDiv.className = 'multi-select-search';
+            
+            const searchInput = document.createElement('input');
+            searchInput.type = 'text';
+            searchInput.id = `customValueSearchInput_${filter.id}`;
+            searchInput.placeholder = 'Search values...';
+            searchInput.oninput = () => searchCustomValues(filter.id);
+            searchInput.onclick = (e) => e.stopPropagation();
+            
+            searchDiv.appendChild(searchInput);
+            
+            // Controls section
+            const controlsDiv = document.createElement('div');
+            controlsDiv.className = 'multi-select-controls';
+            
+            const selectAllBtn = document.createElement('button');
+            selectAllBtn.className = 'multi-select-control-btn';
+            selectAllBtn.textContent = 'Select All';
+            selectAllBtn.onclick = () => selectAllCustomValues(filter.id);
+            
+            const deselectAllBtn = document.createElement('button');
+            deselectAllBtn.className = 'multi-select-control-btn';
+            deselectAllBtn.textContent = 'Deselect All';
+            deselectAllBtn.onclick = () => deselectAllCustomValues(filter.id);
+            
+            controlsDiv.appendChild(selectAllBtn);
+            controlsDiv.appendChild(deselectAllBtn);
+            
+            // Options section
+            const optionsDiv = document.createElement('div');
+            optionsDiv.className = 'multi-select-options';
+            optionsDiv.id = `customValueOptions_${filter.id}`;
+            
+            // Count section
+            const countDiv = document.createElement('div');
+            countDiv.className = 'multi-select-count';
+            countDiv.id = `customValueCount_${filter.id}`;
+            countDiv.textContent = '0 of 0 values selected';
+            
+            dropdown.appendChild(searchDiv);
+            dropdown.appendChild(controlsDiv);
+            dropdown.appendChild(optionsDiv);
+            dropdown.appendChild(countDiv);
+            
+            multiSelect.appendChild(multiSelectInput);
+            multiSelect.appendChild(dropdown);
+            
+            valuesDiv.appendChild(valuesLabel);
+            valuesDiv.appendChild(multiSelect);
+            
+            // Remove button
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'custom-filter-remove';
+            removeBtn.textContent = '✕';
+            removeBtn.onclick = () => removeCustomFilter(filter.id);
+            
+            filterItem.appendChild(columnDiv);
+            filterItem.appendChild(valuesDiv);
+            filterItem.appendChild(removeBtn);
+            
+            container.appendChild(filterItem);
+        }
+        
+        function onCustomColumnChange(filterId) {
+            const filter = customFilters.find(f => f.id === filterId);
+            if (!filter) return;
+            
+            const selectedColumn = document.getElementById(`customColumnSelect_${filterId}`).value;
+            const valuesDiv = document.getElementById(`customValuesDiv_${filterId}`);
             
             if (selectedColumn) {
-                currentCustomColumn = selectedColumn;
-                customValueGroup.style.display = 'block';
-                populateCustomValueOptions(customFilterData[selectedColumn]);
+                filter.column = selectedColumn;
+                valuesDiv.style.display = 'block';
+                populateCustomValueOptions(filterId, customFilterData[selectedColumn]);
                 // Initialize all values as selected
-                selectedCustomValues = new Set(customFilterData[selectedColumn]);
-                updateCustomValueFilterDisplay();
+                filter.selectedValues = new Set(customFilterData[selectedColumn]);
+                updateCustomValueFilterDisplay(filterId);
             } else {
-                currentCustomColumn = '';
-                customValueGroup.style.display = 'none';
-                selectedCustomValues.clear();
+                filter.column = '';
+                valuesDiv.style.display = 'none';
+                filter.selectedValues.clear();
             }
             filterData();
         }
         
-        function populateCustomValueOptions(values) {
-            const customValueOptions = document.getElementById('customValueOptions');
+        function populateCustomValueOptions(filterId, values) {
+            const customValueOptions = document.getElementById(`customValueOptions_${filterId}`);
+            const filter = customFilters.find(f => f.id === filterId);
+            if (!filter) return;
+            
             customValueOptions.innerHTML = '';
             
             values.forEach(value => {
@@ -922,12 +1109,12 @@ def get_javascript_functions():
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
                 checkbox.className = 'multi-select-checkbox';
-                checkbox.checked = selectedCustomValues.has(value);
-                checkbox.onchange = () => toggleCustomValue(value);
+                checkbox.checked = filter.selectedValues.has(value);
+                checkbox.onchange = () => toggleCustomValue(filterId, value);
                 
                 const label = document.createElement('span');
                 label.textContent = value;
-                label.onclick = () => toggleCustomValue(value);
+                label.onclick = () => toggleCustomValue(filterId, value);
                 
                 div.appendChild(checkbox);
                 div.appendChild(label);
@@ -935,64 +1122,79 @@ def get_javascript_functions():
             });
         }
         
-        function toggleCustomValue(value) {
-            if (selectedCustomValues.has(value)) {
-                selectedCustomValues.delete(value);
+        function toggleCustomValue(filterId, value) {
+            const filter = customFilters.find(f => f.id === filterId);
+            if (!filter) return;
+            
+            if (filter.selectedValues.has(value)) {
+                filter.selectedValues.delete(value);
             } else {
-                selectedCustomValues.add(value);
+                filter.selectedValues.add(value);
             }
-            updateCustomValueFilterDisplay();
-            updateCustomValueCheckboxes();
+            updateCustomValueFilterDisplay(filterId);
+            updateCustomValueCheckboxes(filterId);
             filterData();
         }
         
-        function selectAllCustomValues() {
-            const visibleValues = getVisibleCustomValues();
-            visibleValues.forEach(value => selectedCustomValues.add(value));
-            updateCustomValueFilterDisplay();
-            updateCustomValueCheckboxes();
+        function selectAllCustomValues(filterId) {
+            const filter = customFilters.find(f => f.id === filterId);
+            if (!filter) return;
+            
+            const visibleValues = getVisibleCustomValues(filterId);
+            visibleValues.forEach(value => filter.selectedValues.add(value));
+            updateCustomValueFilterDisplay(filterId);
+            updateCustomValueCheckboxes(filterId);
             filterData();
         }
         
-        function deselectAllCustomValues() {
-            const visibleValues = getVisibleCustomValues();
-            visibleValues.forEach(value => selectedCustomValues.delete(value));
-            updateCustomValueFilterDisplay();
-            updateCustomValueCheckboxes();
+        function deselectAllCustomValues(filterId) {
+            const filter = customFilters.find(f => f.id === filterId);
+            if (!filter) return;
+            
+            const visibleValues = getVisibleCustomValues(filterId);
+            visibleValues.forEach(value => filter.selectedValues.delete(value));
+            updateCustomValueFilterDisplay(filterId);
+            updateCustomValueCheckboxes(filterId);
             filterData();
         }
         
-        function getVisibleCustomValues() {
-            const visibleOptions = document.querySelectorAll('#customValueOptions .multi-select-option:not(.hidden)');
+        function getVisibleCustomValues(filterId) {
+            const visibleOptions = document.querySelectorAll(`#customValueOptions_${filterId} .multi-select-option:not(.hidden)`);
             return Array.from(visibleOptions).map(option => option.dataset.value);
         }
         
-        function updateCustomValueFilterDisplay() {
-            const display = document.getElementById('customValueFilterDisplay');
-            const count = document.getElementById('customValueCount');
-            const totalValues = currentCustomColumn ? customFilterData[currentCustomColumn].length : 0;
+        function updateCustomValueFilterDisplay(filterId) {
+            const filter = customFilters.find(f => f.id === filterId);
+            if (!filter) return;
             
-            if (selectedCustomValues.size === 0) {
+            const display = document.getElementById(`customValueFilterDisplay_${filterId}`);
+            const count = document.getElementById(`customValueCount_${filterId}`);
+            const totalValues = filter.column ? customFilterData[filter.column].length : 0;
+            
+            if (filter.selectedValues.size === 0) {
                 display.textContent = 'No values selected';
-            } else if (selectedCustomValues.size === totalValues) {
+            } else if (filter.selectedValues.size === totalValues) {
                 display.textContent = 'All values selected';
-            } else if (selectedCustomValues.size === 1) {
-                display.textContent = Array.from(selectedCustomValues)[0];
+            } else if (filter.selectedValues.size === 1) {
+                display.textContent = Array.from(filter.selectedValues)[0];
             } else {
-                display.textContent = `${selectedCustomValues.size} values selected`;
+                display.textContent = `${filter.selectedValues.size} values selected`;
             }
             
-            count.textContent = `${selectedCustomValues.size} of ${totalValues} values selected`;
+            count.textContent = `${filter.selectedValues.size} of ${totalValues} values selected`;
         }
         
-        function updateCustomValueCheckboxes() {
-            const options = document.querySelectorAll('#customValueOptions .multi-select-option');
+        function updateCustomValueCheckboxes(filterId) {
+            const filter = customFilters.find(f => f.id === filterId);
+            if (!filter) return;
+            
+            const options = document.querySelectorAll(`#customValueOptions_${filterId} .multi-select-option`);
             options.forEach(option => {
                 const value = option.dataset.value;
                 const checkbox = option.querySelector('.multi-select-checkbox');
-                checkbox.checked = selectedCustomValues.has(value);
+                checkbox.checked = filter.selectedValues.has(value);
                 
-                if (selectedCustomValues.has(value)) {
+                if (filter.selectedValues.has(value)) {
                     option.classList.add('selected');
                 } else {
                     option.classList.remove('selected');
@@ -1000,9 +1202,9 @@ def get_javascript_functions():
             });
         }
         
-        function searchCustomValues() {
-            const searchTerm = document.getElementById('customValueSearchInput').value.toLowerCase();
-            const options = document.querySelectorAll('#customValueOptions .multi-select-option');
+        function searchCustomValues(filterId) {
+            const searchTerm = document.getElementById(`customValueSearchInput_${filterId}`).value.toLowerCase();
+            const options = document.querySelectorAll(`#customValueOptions_${filterId} .multi-select-option`);
             
             options.forEach(option => {
                 const value = option.dataset.value.toLowerCase();
@@ -1014,51 +1216,44 @@ def get_javascript_functions():
             });
         }
         
-        function toggleCustomValueDropdown() {
-            const dropdown = document.getElementById('customValueDropdown');
-            const arrow = document.getElementById('customValueArrow');
+        function toggleCustomValueDropdown(filterId) {
+            const dropdown = document.getElementById(`customValueDropdown_${filterId}`);
+            const arrow = document.getElementById(`customValueArrow_${filterId}`);
             const isOpen = dropdown.classList.contains('show');
             
             if (isOpen) {
                 dropdown.classList.remove('show');
                 arrow.classList.remove('open');
                 // Clear search when closing
-                document.getElementById('customValueSearchInput').value = '';
-                searchCustomValues();
+                document.getElementById(`customValueSearchInput_${filterId}`).value = '';
+                searchCustomValues(filterId);
             } else {
                 dropdown.classList.add('show');
                 arrow.classList.add('open');
                 // Focus search input when opening
                 setTimeout(() => {
-                    document.getElementById('customValueSearchInput').focus();
+                    document.getElementById(`customValueSearchInput_${filterId}`).focus();
                 }, 100);
             }
         }
         
-        function filterData() {
-            const genreFilter = document.getElementById('genreFilter').value;
-            const styleFilter = document.getElementById('styleFilter').value;
-            const connectionThreshold = parseInt(document.getElementById('connectionSlider').value);
+        function removeCustomFilter(filterId) {
+            // Remove from array
+            customFilters = customFilters.filter(f => f.id !== filterId);
             
-            // Filter nodes
-            let filteredNodes = fullNetworkData.nodes.filter(node => {
-                // Genre filter
-                if (genreFilter && (!node.genres || !node.genres.includes(genreFilter))) {
-                    return false;
-                }
-                
-                // Style filter
-                if (styleFilter && (!node.styles || !node.styles.includes(styleFilter))) {
-                    return false;
-                }
-                
-                // Connection threshold
-                if (node.value < connectionThreshold) {
-                    return false;
-                }
-                
-                return true;
-            });
+            // Remove from DOM
+            const filterElement = document.getElementById(`customFilter_${filterId}`);
+            if (filterElement) {
+                filterElement.remove();
+            }
+            
+            // Reapply filters
+            filterData();
+        }
+        
+        function filterData() {
+            // Start with all nodes (no node-level filtering needed)
+            let filteredNodes = fullNetworkData.nodes;
             
             // Get node names for link filtering
             const nodeNames = new Set(filteredNodes.map(node => node.name));
@@ -1078,33 +1273,43 @@ def get_javascript_functions():
                     }
                 }
                 
-                // Custom filter
-                if (currentCustomColumn && selectedCustomValues.size > 0 && link.custom_data) {
-                    const linkValues = link.custom_data[currentCustomColumn];
-                    if (linkValues) {
-                        let hasSelectedValue = false;
-                        if (Array.isArray(linkValues)) {
-                            // Check if any value in the array matches selected values
-                            hasSelectedValue = linkValues.some(value => {
-                                if (typeof value === 'string' && value.includes(',')) {
-                                    // Handle comma-separated values
-                                    const parts = value.split(',').map(p => p.trim());
-                                    return parts.some(part => selectedCustomValues.has(part));
+                // Custom filters - only apply if there are actually configured filters
+                if (customFilters.length > 0) {
+                    const activeCustomFilters = customFilters.filter(filter => 
+                        filter.column && 
+                        filter.selectedValues.size > 0 && 
+                        filter.selectedValues.size < (customFilterData[filter.column] ? customFilterData[filter.column].length : 0)
+                    );
+                    
+                    for (const filter of activeCustomFilters) {
+                        if (link.custom_data) {
+                            const linkValues = link.custom_data[filter.column];
+                            if (linkValues) {
+                                let hasSelectedValue = false;
+                                if (Array.isArray(linkValues)) {
+                                    // Check if any value in the array matches selected values
+                                    hasSelectedValue = linkValues.some(value => {
+                                        if (typeof value === 'string' && value.includes(',')) {
+                                            // Handle comma-separated values
+                                            const parts = value.split(',').map(p => p.trim());
+                                            return parts.some(part => filter.selectedValues.has(part));
+                                        }
+                                        return filter.selectedValues.has(String(value));
+                                    });
+                                } else {
+                                    // Single value
+                                    if (typeof linkValues === 'string' && linkValues.includes(',')) {
+                                        // Handle comma-separated values
+                                        const parts = linkValues.split(',').map(p => p.trim());
+                                        hasSelectedValue = parts.some(part => filter.selectedValues.has(part));
+                                    } else {
+                                        hasSelectedValue = filter.selectedValues.has(String(linkValues));
+                                    }
                                 }
-                                return selectedCustomValues.has(String(value));
-                            });
-                        } else {
-                            // Single value
-                            if (typeof linkValues === 'string' && linkValues.includes(',')) {
-                                // Handle comma-separated values
-                                const parts = linkValues.split(',').map(p => p.trim());
-                                hasSelectedValue = parts.some(part => selectedCustomValues.has(part));
-                            } else {
-                                hasSelectedValue = selectedCustomValues.has(String(linkValues));
+                                if (!hasSelectedValue) {
+                                    return false; // This link doesn't match this custom filter
+                                }
                             }
-                        }
-                        if (!hasSelectedValue) {
-                            return false;
                         }
                     }
                 }
@@ -1112,9 +1317,19 @@ def get_javascript_functions():
                 return true;
             });
             
+            // After filtering links, remove nodes that have no connections
+            const connectedNodeNames = new Set();
+            filteredLinks.forEach(link => {
+                connectedNodeNames.add(link.source);
+                connectedNodeNames.add(link.target);
+            });
+            
+            // Only keep nodes that have at least one connection
+            const finalFilteredNodes = filteredNodes.filter(node => connectedNodeNames.has(node.name));
+            
             // Update current data
             currentData = {
-                nodes: filteredNodes,
+                nodes: finalFilteredNodes,
                 links: filteredLinks,
                 categories: fullNetworkData.categories
             };
@@ -1133,32 +1348,24 @@ def get_javascript_functions():
             
             // Show active filters
             const activeFilters = [];
-            const genreFilter = document.getElementById('genreFilter').value;
-            const styleFilter = document.getElementById('styleFilter').value;
-            const connectionThreshold = parseInt(document.getElementById('connectionSlider').value);
             
-            if (genreFilter) activeFilters.push(`Genre: ${genreFilter}`);
-            if (styleFilter) activeFilters.push(`Style: ${styleFilter}`);
-            if (connectionThreshold > 1) activeFilters.push(`Min Connections: ${connectionThreshold}`);
             if (selectedRoles.size < [...new Set(fullNetworkData.links.flatMap(link => link.roles || []))].length) {
                 activeFilters.push(`Roles: ${selectedRoles.size} selected`);
             }
-            if (currentCustomColumn && selectedCustomValues.size > 0) {
-                const totalCustomValues = customFilterData[currentCustomColumn] ? customFilterData[currentCustomColumn].length : 0;
-                if (selectedCustomValues.size < totalCustomValues) {
-                    activeFilters.push(`${currentCustomColumn}: ${selectedCustomValues.size} selected`);
+            // Add active custom filters (only those that are actually filtering)
+            customFilters.forEach(filter => {
+                if (filter.column && filter.selectedValues.size > 0) {
+                    const totalCustomValues = customFilterData[filter.column] ? customFilterData[filter.column].length : 0;
+                    if (filter.selectedValues.size < totalCustomValues) {
+                        activeFilters.push(`${filter.column}: ${filter.selectedValues.size} selected`);
+                    }
                 }
-            }
+            });
             
             document.getElementById('activeFilters').textContent = activeFilters.length > 0 ? activeFilters.join(', ') : 'None';
         }
         
         function resetFilters() {
-            document.getElementById('genreFilter').value = '';
-            document.getElementById('styleFilter').value = '';
-            document.getElementById('connectionSlider').value = 1;
-            document.getElementById('connectionValue').textContent = '1';
-            
             // Reset role filter
             selectedRoles = new Set(window.allRoles);
             updateRoleFilterDisplay();
@@ -1168,22 +1375,22 @@ def get_javascript_functions():
             document.getElementById('roleSearchInput').value = '';
             searchRoles();
             
-            // Reset custom filter
-            document.getElementById('customColumnFilter').value = '';
-            document.getElementById('customValueFilterGroup').style.display = 'none';
-            currentCustomColumn = '';
-            selectedCustomValues.clear();
+            // Reset custom filters
+            customFilters.forEach(filter => {
+                const filterElement = document.getElementById(`customFilter_${filter.id}`);
+                if (filterElement) {
+                    filterElement.remove();
+                }
+            });
+            customFilters = [];
+            nextCustomFilterId = 1;
             
             currentData = JSON.parse(JSON.stringify(fullNetworkData));
             updateChart();
             updateStats();
         }
         
-        // Connection slider update
-        document.getElementById('connectionSlider').addEventListener('input', function() {
-            document.getElementById('connectionValue').textContent = this.value;
-            filterData();
-        });
+
         
         function showNodeDetails(nodeData) {
             const infoPanel = document.getElementById('infoPanel');
