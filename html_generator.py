@@ -743,12 +743,13 @@ def get_javascript_functions():
             // Store all roles globally for search functionality
             window.allRoles = roles;
             
+            // Initialize all roles as selected BEFORE populating options
+            selectedRoles = new Set(roles);
+            
             // Populate role filter with enhanced structure
             populateRoleOptions(roles);
-            
-            // Initialize all roles as selected
-            selectedRoles = new Set(roles);
             updateRoleFilterDisplay();
+            updateRoleCheckboxes();
         }
         
         function populateRoleOptions(roles) {
@@ -1073,10 +1074,11 @@ def get_javascript_functions():
             if (selectedColumn) {
                 filter.column = selectedColumn;
                 valuesDiv.style.display = 'block';
-                populateCustomValueOptions(filterId, customFilterData[selectedColumn]);
-                // Initialize all values as selected
+                // Initialize all values as selected BEFORE populating options
                 filter.selectedValues = new Set(customFilterData[selectedColumn]);
+                populateCustomValueOptions(filterId, customFilterData[selectedColumn]);
                 updateCustomValueFilterDisplay(filterId);
+                updateCustomValueCheckboxes(filterId);
             } else {
                 filter.column = '';
                 valuesDiv.style.display = 'none';
