@@ -64,7 +64,7 @@ def create_network_data(collection_df):
     Create network dataset from collection dataframe.
     
     Returns:
-        pandas.DataFrame with columns: musician, role, main_artist, album
+        pandas.DataFrame with columns: musician, role, main_artist, album, and all original columns
     """
     all_connections = []
     
@@ -77,6 +77,10 @@ def create_network_data(collection_df):
         
         for connection in connections:
             connection['album'] = album
+            # Add all original collection columns for custom filtering
+            for col in collection_df.columns:
+                if col not in ['Artist', 'Album', 'Musicians']:
+                    connection[col] = row[col]
             all_connections.append(connection)
     
     return pd.DataFrame(all_connections)
@@ -217,6 +221,12 @@ def create_echarts_network_data(network_df, collection_df):
                 connection_genres = artist_info.get(artist, {}).get('genres', [])
                 connection_styles = artist_info.get(artist, {}).get('styles', [])
                 
+                # Get custom filter data for this connection
+                custom_data = {}
+                for col in filtered_df.columns:
+                    if col not in ['musician', 'role', 'main_artist', 'album', 'clean_role']:
+                        custom_data[col] = row[col]
+                
                 links.append({
                     'source': musician,
                     'target': artist,
@@ -225,16 +235,26 @@ def create_echarts_network_data(network_df, collection_df):
                     'clean_roles': [clean_role],
                     'albums': [album],
                     'genres': connection_genres,
-                    'styles': connection_styles
+                    'styles': connection_styles,
+                    'custom_data': custom_data
                 })
             else:
-                # Find existing link and add role/album
+                # Find existing link and add role/album/custom data
                 for link in links:
                     if link['source'] == musician and link['target'] == artist:
                         link['roles'].append(role)
                         link['clean_roles'].append(clean_role)
                         link['albums'].append(album)
                         link['value'] += 1
+                        # Merge custom data
+                        for col in filtered_df.columns:
+                            if col not in ['musician', 'role', 'main_artist', 'album', 'clean_role']:
+                                if col not in link['custom_data']:
+                                    link['custom_data'][col] = []
+                                if isinstance(link['custom_data'][col], list):
+                                    link['custom_data'][col].append(row[col])
+                                else:
+                                    link['custom_data'][col] = [link['custom_data'][col], row[col]]
                         break
     
     # Get all unique genres, styles, and clean roles for filters
@@ -260,3 +280,42 @@ def create_echarts_network_data(network_df, collection_df):
         'styles': sorted(list(all_styles)),
         'clean_roles': sorted(list(all_clean_roles))
     } 
+
+
+def get_custom_filter_data(collection_df):
+    """
+    Extract column data for custom filtering.
+    Excludes Artist, Album, and Musicians columns.
+    
+    Returns:
+        Dictionary with available columns and their unique values
+    """
+    # Columns to exclude from custom filtering
+    excluded_columns = {'Artist', 'Album', 'Musicians'}
+    
+    # Get all columns except excluded ones
+    available_columns = [col for col in collection_df.columns if col not in excluded_columns]
+    
+    custom_filter_data = {}
+    
+    for column in available_columns:
+        # Get unique values, excluding NaN values
+        unique_values = collection_df[column].dropna().unique()
+        
+        # For columns that might contain comma-separated values, split them
+        expanded_values = set()
+        for value in unique_values:
+            if isinstance(value, str) and ',' in value:
+                # Split by comma and add each part
+                parts = [part.strip() for part in value.split(',')]
+                expanded_values.update(parts)
+            else:
+                expanded_values.add(str(value))
+        
+        # Convert to sorted list, removing empty strings
+        sorted_values = sorted([v for v in expanded_values if v and v.strip()])
+        
+        if sorted_values:  # Only include columns that have values
+            custom_filter_data[column] = sorted_values
+    
+    return custom_filter_data 

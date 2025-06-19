@@ -11,7 +11,8 @@ from pathlib import Path
 from data_processor import (
     load_collection_data, 
     create_network_data, 
-    create_echarts_network_data
+    create_echarts_network_data,
+    get_custom_filter_data
 )
 from analysis import (
     analyze_top_musicians,
@@ -111,6 +112,9 @@ def main():
         if args.verbose:
             print("⚙️  Step 5: Generating interactive HTML...")
         
+        # Get custom filter data
+        custom_filter_data = get_custom_filter_data(collection_df)
+        
         # Convert DataFrames to dictionaries for JSON serialization
         musician_stats_data = musician_stats_df.to_dict('records')
         session_musicians_data = session_musicians_df.to_dict('records')
@@ -119,6 +123,7 @@ def main():
             network_data=echarts_data,
             musician_stats_data=musician_stats_data,
             session_musicians_data=session_musicians_data,
+            custom_filter_data=custom_filter_data,
             output_path=args.output
         )
         
