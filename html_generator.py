@@ -517,6 +517,15 @@ def get_html_template():
             border-radius: 4px;
             border: 1px solid #ffeaa7;
         }
+        
+        .filters-section {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            margin: 20px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
 <body>
@@ -525,38 +534,9 @@ def get_html_template():
         <p class="subtitle">Explore connections, discover top musicians, and analyze your collection</p>
     </div>
     
-    <!-- Tab Navigation -->
-    <div class="tab-container">
-        <div class="tab-nav">
-            <button class="tab-btn active" onclick="showTab('network')">🌐 Network</button>
-            <button class="tab-btn" onclick="showTab('top-musicians')">🏆 Top Musicians</button>
-            <button class="tab-btn" onclick="showTab('session-musicians')">🎭 Session Musicians</button>
-            <button class="tab-btn" onclick="showTab('debug')">🔍 Debug Musician</button>
-        </div>
-    </div>
-    
-    <!-- Network Tab -->
-    <div id="network-tab" class="tab-content active">
+    <!-- Global Filters Section -->
+    <div class="filters-section">
         <div class="controls">
-            <div class="control-group">
-                <label for="genreFilter">Genre Filter:</label>
-                <select id="genreFilter">
-                    <option value="">All Genres</option>
-                </select>
-            </div>
-            
-            <div class="control-group">
-                <label for="styleFilter">Style Filter:</label>
-                <select id="styleFilter">
-                    <option value="">All Styles</option>
-                </select>
-            </div>
-            
-            <div class="control-group">
-                <label for="connectionSlider">Min Connections: <span id="connectionValue">1</span></label>
-                <input type="range" id="connectionSlider" min="1" max="31" value="1">
-            </div>
-            
             <div class="control-group">
                 <label for="roleFilter">Roles:</label>
                 <div class="multi-select">
@@ -600,7 +580,20 @@ def get_html_template():
             <span class="stats-item">Connections: <span class="stats-value" id="connectionCount">0</span></span>
             <span class="stats-item">Active Filters: <span class="stats-value" id="activeFilters">None</span></span>
         </div>
-        
+    </div>
+    
+    <!-- Tab Navigation -->
+    <div class="tab-container">
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="showTab('network')">🌐 Network</button>
+            <button class="tab-btn" onclick="showTab('top-musicians')">🏆 Top Musicians</button>
+            <button class="tab-btn" onclick="showTab('session-musicians')">🎭 Session Musicians</button>
+            <button class="tab-btn" onclick="showTab('debug')">🔍 Debug Musician</button>
+        </div>
+    </div>
+    
+    <!-- Network Tab -->
+    <div id="network-tab" class="tab-content active">
         <div class="click-hint">💡 Click on any node to see detailed information</div>
         
         <div id="container"></div>
@@ -695,8 +688,6 @@ def get_html_template():
         updateStats();
         
         // Event listeners
-        document.getElementById('genreFilter').addEventListener('change', filterData);
-        document.getElementById('styleFilter').addEventListener('change', filterData);
         
         myChart.on('click', function(params) {
             if (params.dataType === 'node') {
@@ -1336,6 +1327,14 @@ def get_javascript_functions():
             
             updateChart();
             updateStats();
+            
+            // Update all tabs with filtered data
+            if (window.topMusiciansInitialized) {
+                updateTopMusiciansTab();
+            }
+            if (window.sessionMusiciansInitialized) {
+                updateSessionMusiciansTab();
+            }
         }
         
         function updateStats() {
@@ -1388,6 +1387,14 @@ def get_javascript_functions():
             currentData = JSON.parse(JSON.stringify(fullNetworkData));
             updateChart();
             updateStats();
+            
+            // Update all tabs with reset data
+            if (window.topMusiciansInitialized) {
+                updateTopMusiciansTab();
+            }
+            if (window.sessionMusiciansInitialized) {
+                updateSessionMusiciansTab();
+            }
         }
         
 
@@ -1568,16 +1575,72 @@ def get_javascript_functions():
             myChart.setOption(option, true);
         }
         
+        // Calculate filtered musician statistics from current network data
+        function calculateFilteredMusicianStats() {
+            const musicianStats = {};
+            const artistStats = {};
+            
+            // Count connections for each musician and artist from filtered data
+            currentData.links.forEach(link => {
+                const source = link.source;
+                const target = link.target;
+                
+                // Find source and target nodes to determine their types
+                const sourceNode = currentData.nodes.find(n => n.name === source);
+                const targetNode = currentData.nodes.find(n => n.name === target);
+                
+                if (sourceNode && targetNode) {
+                    if (sourceNode.category === 'musician' && targetNode.category === 'artist') {
+                        // Musician -> Artist connection
+                        if (!musicianStats[source]) {
+                            musicianStats[source] = { as_main_artist: 0, as_session_musician: 0, total_records: 0 };
+                        }
+                        musicianStats[source].as_session_musician++;
+                        musicianStats[source].total_records++;
+                    } else if (sourceNode.category === 'artist' && targetNode.category === 'musician') {
+                        // Artist -> Musician connection  
+                        if (!musicianStats[target]) {
+                            musicianStats[target] = { as_main_artist: 0, as_session_musician: 0, total_records: 0 };
+                        }
+                        musicianStats[target].as_session_musician++;
+                        musicianStats[target].total_records++;
+                    }
+                }
+            });
+            
+            // Convert to array format similar to original musicianStatsData
+            return Object.entries(musicianStats).map(([musician, stats]) => ({
+                musician: musician,
+                total_records: stats.total_records,
+                as_main_artist: stats.as_main_artist,
+                as_session_musician: stats.as_session_musician,
+                session_ratio: stats.total_records > 0 ? stats.as_session_musician / stats.total_records : 0
+            }));
+        }
+        
         // Top Musicians Tab
         function initTopMusiciansTab() {
             if (window.topMusiciansInitialized) return;
             window.topMusiciansInitialized = true;
             
-            // Create bar chart for top musicians
-            const ctx1 = document.getElementById('topMusiciansChart').getContext('2d');
-            const topMusicians = musicianStatsData.sort((a, b) => b.total_records - a.total_records).slice(0, 15);
+            // Store chart instances globally so we can update them
+            window.topMusiciansChart = null;
+            window.sessionScatterChart = null;
             
-            new Chart(ctx1, {
+            updateTopMusiciansTab();
+        }
+        
+        function updateTopMusiciansTab() {
+            const filteredStats = calculateFilteredMusicianStats();
+            const topMusicians = filteredStats.sort((a, b) => b.total_records - a.total_records).slice(0, 15);
+            
+            // Update or create bar chart
+            const ctx1 = document.getElementById('topMusiciansChart').getContext('2d');
+            if (window.topMusiciansChart) {
+                window.topMusiciansChart.destroy();
+            }
+            
+            window.topMusiciansChart = new Chart(ctx1, {
                 type: 'bar',
                 data: {
                     labels: topMusicians.map(m => m.musician),
@@ -1605,15 +1668,18 @@ def get_javascript_functions():
                 }
             });
             
-            // Create scatter plot for main artist vs session work
+            // Update or create scatter plot
             const ctx2 = document.getElementById('sessionScatterChart').getContext('2d');
+            if (window.sessionScatterChart) {
+                window.sessionScatterChart.destroy();
+            }
             
-            new Chart(ctx2, {
+            window.sessionScatterChart = new Chart(ctx2, {
                 type: 'scatter',
                 data: {
                     datasets: [{
                         label: 'Musicians',
-                        data: musicianStatsData.map(m => ({
+                        data: filteredStats.map(m => ({
                             x: m.as_main_artist,
                             y: m.as_session_musician,
                             musician: m.musician,
@@ -1654,8 +1720,10 @@ def get_javascript_functions():
                 }
             });
             
-            // Populate musicians list
+            // Update musicians list
             const listContainer = document.getElementById('topMusiciansList');
+            listContainer.innerHTML = ''; // Clear existing content
+            
             topMusicians.forEach(musician => {
                 const item = document.createElement('div');
                 item.className = 'musician-item';
@@ -1678,9 +1746,20 @@ def get_javascript_functions():
             if (window.sessionMusiciansInitialized) return;
             window.sessionMusiciansInitialized = true;
             
-            const listContainer = document.getElementById('sessionMusiciansList');
+            updateSessionMusiciansTab();
+        }
+        
+        function updateSessionMusiciansTab() {
+            const filteredStats = calculateFilteredMusicianStats();
+            // Filter for session musicians (70%+ session work, 2+ records)
+            const sessionMusicians = filteredStats.filter(m => 
+                m.total_records >= 2 && m.session_ratio >= 0.7
+            ).sort((a, b) => b.session_ratio - a.session_ratio);
             
-            sessionMusiciansData.forEach(musician => {
+            const listContainer = document.getElementById('sessionMusiciansList');
+            listContainer.innerHTML = ''; // Clear existing content
+            
+            sessionMusicians.forEach(musician => {
                 const item = document.createElement('div');
                 item.className = 'musician-item';
                 item.innerHTML = `
@@ -1749,16 +1828,18 @@ def get_javascript_functions():
                 return;
             }
             
-            const matchingMusicians = musicianStatsData.filter(m => 
+            // Use filtered data for search
+            const filteredStats = calculateFilteredMusicianStats();
+            const matchingMusicians = filteredStats.filter(m => 
                 m.musician.toLowerCase().includes(searchTerm)
             ).slice(0, 10);
             
             if (matchingMusicians.length === 0) {
-                resultsContainer.innerHTML = '<p>No musicians found matching your search.</p>';
+                resultsContainer.innerHTML = '<p>No musicians found matching your search in current filtered data.</p>';
                 return;
             }
             
-            let html = '<h4>Search Results:</h4>';
+            let html = '<h4>Search Results (Filtered Data):</h4>';
             matchingMusicians.forEach(musician => {
                 html += `
                     <div class="musician-item" onclick="showDebugDetails('${musician.musician}')">
@@ -1778,8 +1859,9 @@ def get_javascript_functions():
         }
         
         function showDebugDetails(musicianName) {
-            const musician = musicianStatsData.find(m => m.musician === musicianName);
-            if (!musician) return;
+            const originalMusician = musicianStatsData.find(m => m.musician === musicianName);
+            const filteredStats = calculateFilteredMusicianStats();
+            const filteredMusician = filteredStats.find(m => m.musician === musicianName);
             
             const detailsContainer = document.getElementById('debugDetails');
             const nameElement = document.getElementById('debugMusicianName');
@@ -1789,21 +1871,32 @@ def get_javascript_functions():
             
             let content = `
                 <div class="debug-section">
-                    <h4>Basic Statistics</h4>
+                    <h4>Original Statistics (All Data)</h4>
                     <ul class="debug-list">
-                        <li>Total Records: ${musician.total_records}</li>
-                        <li>As Main Artist: ${musician.as_main_artist}</li>
-                        <li>As Session Musician: ${musician.as_session_musician}</li>
-                        <li>Session Ratio: ${(musician.session_ratio * 100).toFixed(1)}%</li>
+                        <li>Total Records: ${originalMusician ? originalMusician.total_records : 'N/A'}</li>
+                        <li>As Main Artist: ${originalMusician ? originalMusician.as_main_artist : 'N/A'}</li>
+                        <li>As Session Musician: ${originalMusician ? originalMusician.as_session_musician : 'N/A'}</li>
+                        <li>Session Ratio: ${originalMusician ? (originalMusician.session_ratio * 100).toFixed(1) + '%' : 'N/A'}</li>
+                    </ul>
+                </div>
+                
+                <div class="debug-section">
+                    <h4>Filtered Statistics (Current View)</h4>
+                    <ul class="debug-list">
+                        <li>Total Records: ${filteredMusician ? filteredMusician.total_records : 'Not visible in current filter'}</li>
+                        <li>As Main Artist: ${filteredMusician ? filteredMusician.as_main_artist : 'N/A'}</li>
+                        <li>As Session Musician: ${filteredMusician ? filteredMusician.as_session_musician : 'N/A'}</li>
+                        <li>Session Ratio: ${filteredMusician ? (filteredMusician.session_ratio * 100).toFixed(1) + '%' : 'N/A'}</li>
                     </ul>
                 </div>
                 
                 <div class="debug-section">
                     <h4>Network Presence</h4>
                     <ul class="debug-list">
-                        <li>Appears in network: ${fullNetworkData.nodes.some(n => n.name === musicianName) ? 'Yes' : 'No'}</li>
-                        <li>Node connections: ${fullNetworkData.nodes.find(n => n.name === musicianName)?.value || 0}</li>
+                        <li>Appears in full network: ${fullNetworkData.nodes.some(n => n.name === musicianName) ? 'Yes' : 'No'}</li>
+                        <li>Full network connections: ${fullNetworkData.nodes.find(n => n.name === musicianName)?.value || 0}</li>
                         <li>Currently visible: ${currentData.nodes.some(n => n.name === musicianName) ? 'Yes' : 'No'}</li>
+                        <li>Filtered connections: ${currentData.nodes.find(n => n.name === musicianName)?.value || 0}</li>
                     </ul>
                 </div>
                 
