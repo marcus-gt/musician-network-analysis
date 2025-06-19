@@ -543,11 +543,11 @@ def get_html_template():
                     <div class="multi-select-input" onclick="toggleRoleDropdown()">
                         <span id="roleFilterDisplay">All roles selected</span>
                         <span class="multi-select-arrow" id="roleArrow">▼</span>
-                    </div>
+            </div>
                     <div id="roleDropdown" class="multi-select-dropdown">
                         <div class="multi-select-search">
                             <input type="text" id="roleSearchInput" placeholder="Search roles..." oninput="searchRoles()" onclick="event.stopPropagation()">
-                    </div>
+            </div>
                         <div class="multi-select-controls">
                             <button class="multi-select-control-btn" onclick="selectAllRoles()">Select All</button>
                             <button class="multi-select-control-btn" onclick="deselectAllRoles()">Deselect All</button>
@@ -567,7 +567,7 @@ def get_html_template():
                 <label>Custom Filters:</label>
                 <div class="custom-filters-container" id="customFiltersContainer">
                     <!-- Custom filters will be added here dynamically -->
-                </div>
+                    </div>
                 <button class="add-filter-btn" onclick="addCustomFilter()">+ Add Custom Filter</button>
             </div>
             
@@ -580,8 +580,8 @@ def get_html_template():
             <span class="stats-item">Connections: <span class="stats-value" id="connectionCount">0</span></span>
             <span class="stats-item">Active Filters: <span class="stats-value" id="activeFilters">None</span></span>
         </div>
-    </div>
-    
+        </div>
+        
     <!-- Tab Navigation -->
     <div class="tab-container">
         <div class="tab-nav">
@@ -1577,45 +1577,16 @@ def get_javascript_functions():
         
         // Calculate filtered musician statistics from current network data
         function calculateFilteredMusicianStats() {
-            const musicianStats = {};
-            const artistStats = {};
+            // Get the list of all visible nodes (both musicians and artists)
+            // because musicians who are also main artists appear as artist nodes
+            const visibleNodeNames = new Set(
+                currentData.nodes.map(node => node.name)
+            );
             
-            // Count connections for each musician and artist from filtered data
-            currentData.links.forEach(link => {
-                const source = link.source;
-                const target = link.target;
-                
-                // Find source and target nodes to determine their types
-                const sourceNode = currentData.nodes.find(n => n.name === source);
-                const targetNode = currentData.nodes.find(n => n.name === target);
-                
-                if (sourceNode && targetNode) {
-                    if (sourceNode.category === 'musician' && targetNode.category === 'artist') {
-                        // Musician -> Artist connection
-                        if (!musicianStats[source]) {
-                            musicianStats[source] = { as_main_artist: 0, as_session_musician: 0, total_records: 0 };
-                        }
-                        musicianStats[source].as_session_musician++;
-                        musicianStats[source].total_records++;
-                    } else if (sourceNode.category === 'artist' && targetNode.category === 'musician') {
-                        // Artist -> Musician connection  
-                        if (!musicianStats[target]) {
-                            musicianStats[target] = { as_main_artist: 0, as_session_musician: 0, total_records: 0 };
-                        }
-                        musicianStats[target].as_session_musician++;
-                        musicianStats[target].total_records++;
-                    }
-                }
-            });
-            
-            // Convert to array format similar to original musicianStatsData
-            return Object.entries(musicianStats).map(([musician, stats]) => ({
-                musician: musician,
-                total_records: stats.total_records,
-                as_main_artist: stats.as_main_artist,
-                as_session_musician: stats.as_session_musician,
-                session_ratio: stats.total_records > 0 ? stats.as_session_musician / stats.total_records : 0
-            }));
+            // Filter the original musician stats data to only include visible musicians
+            return musicianStatsData.filter(musician => 
+                visibleNodeNames.has(musician.musician)
+            );
         }
         
         // Top Musicians Tab
@@ -1796,16 +1767,20 @@ def get_javascript_functions():
                     </ul>
                 </div>
                 <div class="debug-section">
-                    <h4>Albums (${musician.records.length})</h4>
+                    <h4>Albums (${musician.records ? musician.records.length : 0})</h4>
                     <ul class="debug-list">
             `;
             
+            if (musician.records) {
             musician.records.slice(0, 20).forEach(record => {
                 content += `<li>${record}</li>`;
             });
             
             if (musician.records.length > 20) {
                 content += `<li><em>... and ${musician.records.length - 20} more</em></li>`;
+                }
+            } else {
+                content += `<li>No album data available</li>`;
             }
             
             content += '</ul></div>';
@@ -1901,16 +1876,20 @@ def get_javascript_functions():
                 </div>
                 
                 <div class="debug-section">
-                    <h4>Albums (${musician.records.length})</h4>
+                    <h4>Albums (${originalMusician && originalMusician.records ? originalMusician.records.length : 0})</h4>
                     <ul class="debug-list">
             `;
             
-            musician.records.slice(0, 15).forEach(record => {
+            if (originalMusician && originalMusician.records) {
+                originalMusician.records.slice(0, 15).forEach(record => {
                 content += `<li>${record}</li>`;
             });
             
-            if (musician.records.length > 15) {
-                content += `<li><em>... and ${musician.records.length - 15} more</em></li>`;
+                if (originalMusician.records.length > 15) {
+                    content += `<li><em>... and ${originalMusician.records.length - 15} more</em></li>`;
+                }
+            } else {
+                content += `<li>No album data available</li>`;
             }
             
             content += '</ul></div>';
