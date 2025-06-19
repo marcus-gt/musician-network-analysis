@@ -119,6 +119,35 @@ def get_html_template():
         
         .multi-select {
             position: relative;
+            min-width: 250px;
+        }
+        
+        .multi-select-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .multi-select-input:hover {
+            border-color: #007bff;
+        }
+        
+        .multi-select-arrow {
+            margin-left: 8px;
+            font-size: 12px;
+            color: #666;
+            transition: transform 0.2s;
+        }
+        
+        .multi-select-arrow.open {
+            transform: rotate(180deg);
         }
         
         .multi-select-dropdown {
@@ -130,20 +159,72 @@ def get_html_template():
             background: white;
             border: 1px solid #ddd;
             border-radius: 4px;
-            max-height: 300px;
-            overflow-y: auto;
+            max-height: 400px;
             z-index: 1000;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            overflow: hidden;
         }
         
         .multi-select-dropdown.show {
             display: block;
         }
         
-        .multi-select-option {
+        .multi-select-search {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+            background: #f8f9fa;
+        }
+        
+        .multi-select-search input {
+            width: 100%;
             padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+        }
+        
+        .multi-select-search input:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+        
+        .multi-select-controls {
+            padding: 8px 12px;
+            border-bottom: 1px solid #e9ecef;
+            background: #f8f9fa;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .multi-select-control-btn {
+            padding: 4px 8px;
+            font-size: 12px;
+            border: 1px solid #007bff;
+            background: white;
+            color: #007bff;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .multi-select-control-btn:hover {
+            background: #007bff;
+            color: white;
+        }
+        
+        .multi-select-options {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        
+        .multi-select-option {
+            padding: 10px 12px;
             cursor: pointer;
             border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.2s;
         }
         
         .multi-select-option:hover {
@@ -153,6 +234,26 @@ def get_html_template():
         .multi-select-option.selected {
             background-color: #e3f2fd;
             color: #1976d2;
+        }
+        
+        .multi-select-option.hidden {
+            display: none;
+        }
+        
+        .multi-select-checkbox {
+            margin-right: 8px;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+        
+        .multi-select-count {
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            font-size: 12px;
+            color: #666;
+            text-align: center;
         }
         
         .stats-panel {
@@ -353,11 +454,25 @@ def get_html_template():
             <div class="control-group">
                 <label for="roleFilter">Roles:</label>
                 <div class="multi-select">
-                    <input type="text" id="roleFilterInput" placeholder="Select roles..." readonly onclick="toggleRoleDropdown()">
+                    <div class="multi-select-input" onclick="toggleRoleDropdown()">
+                        <span id="roleFilterDisplay">All roles selected</span>
+                        <span class="multi-select-arrow" id="roleArrow">▼</span>
+                    </div>
                     <div id="roleDropdown" class="multi-select-dropdown">
-                        <div class="multi-select-option" onclick="selectAllRoles()"><strong>Select All</strong></div>
-                        <div class="multi-select-option" onclick="deselectAllRoles()"><strong>Deselect All</strong></div>
-                        <hr style="margin: 5px 0;">
+                        <div class="multi-select-search">
+                            <input type="text" id="roleSearchInput" placeholder="Search roles..." oninput="searchRoles()" onclick="event.stopPropagation()">
+                        </div>
+                        <div class="multi-select-controls">
+                            <button class="multi-select-control-btn" onclick="selectAllRoles()">Select All</button>
+                            <button class="multi-select-control-btn" onclick="deselectAllRoles()">Deselect All</button>
+                            <button class="multi-select-control-btn" onclick="selectCommonRoles()">Common Only</button>
+                        </div>
+                        <div class="multi-select-options" id="roleOptions">
+                            <!-- Role options will be populated here -->
+                        </div>
+                        <div class="multi-select-count" id="roleCount">
+                            0 of 0 roles selected
+                        </div>
                     </div>
                 </div>
             </div>
@@ -512,12 +627,15 @@ def get_javascript_functions():
         function populateFilters() {
             const genreFilter = document.getElementById('genreFilter');
             const styleFilter = document.getElementById('styleFilter');
-            const roleDropdown = document.getElementById('roleDropdown');
+            const roleOptions = document.getElementById('roleOptions');
             
             // Get unique values from full data
             const genres = [...new Set(fullNetworkData.nodes.flatMap(node => node.genres || []))].sort();
             const styles = [...new Set(fullNetworkData.nodes.flatMap(node => node.styles || []))].sort();
             const roles = [...new Set(fullNetworkData.links.flatMap(link => link.roles || []))].sort();
+            
+            // Store all roles globally for search functionality
+            window.allRoles = roles;
             
             // Populate genre filter
             genres.forEach(genre => {
@@ -535,18 +653,37 @@ def get_javascript_functions():
                 styleFilter.appendChild(option);
             });
             
-            // Populate role filter
-            roles.forEach(role => {
-                const div = document.createElement('div');
-                div.className = 'multi-select-option';
-                div.textContent = role;
-                div.onclick = () => toggleRole(role);
-                roleDropdown.appendChild(div);
-            });
+            // Populate role filter with enhanced structure
+            populateRoleOptions(roles);
             
             // Initialize all roles as selected
             selectedRoles = new Set(roles);
             updateRoleFilterDisplay();
+        }
+        
+        function populateRoleOptions(roles) {
+            const roleOptions = document.getElementById('roleOptions');
+            roleOptions.innerHTML = '';
+            
+            roles.forEach(role => {
+                const div = document.createElement('div');
+                div.className = 'multi-select-option';
+                div.dataset.role = role;
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'multi-select-checkbox';
+                checkbox.checked = selectedRoles.has(role);
+                checkbox.onchange = () => toggleRole(role);
+                
+                const label = document.createElement('span');
+                label.textContent = role;
+                label.onclick = () => toggleRole(role);
+                
+                div.appendChild(checkbox);
+                div.appendChild(label);
+                roleOptions.appendChild(div);
+            });
         }
         
         function toggleRole(role) {
@@ -556,55 +693,123 @@ def get_javascript_functions():
                 selectedRoles.add(role);
             }
             updateRoleFilterDisplay();
+            updateRoleCheckboxes();
             filterData();
         }
         
         function selectAllRoles() {
-            const roles = [...new Set(fullNetworkData.links.flatMap(link => link.roles || []))];
-            selectedRoles = new Set(roles);
+            const visibleRoles = getVisibleRoles();
+            visibleRoles.forEach(role => selectedRoles.add(role));
             updateRoleFilterDisplay();
+            updateRoleCheckboxes();
             filterData();
         }
         
         function deselectAllRoles() {
-            selectedRoles.clear();
+            const visibleRoles = getVisibleRoles();
+            visibleRoles.forEach(role => selectedRoles.delete(role));
             updateRoleFilterDisplay();
+            updateRoleCheckboxes();
             filterData();
         }
         
+        function selectCommonRoles() {
+            // Define common instrument roles
+            const commonRoles = ['Piano', 'Guitar', 'Bass', 'Drums', 'Vocals', 'Saxophone', 'Trumpet', 'Violin'];
+            selectedRoles.clear();
+            commonRoles.forEach(role => {
+                if (window.allRoles.includes(role)) {
+                    selectedRoles.add(role);
+                }
+            });
+            updateRoleFilterDisplay();
+            updateRoleCheckboxes();
+            filterData();
+        }
+        
+        function getVisibleRoles() {
+            const visibleOptions = document.querySelectorAll('#roleOptions .multi-select-option:not(.hidden)');
+            return Array.from(visibleOptions).map(option => option.dataset.role);
+        }
+        
         function updateRoleFilterDisplay() {
-            const input = document.getElementById('roleFilterInput');
-            const options = document.querySelectorAll('#roleDropdown .multi-select-option');
+            const display = document.getElementById('roleFilterDisplay');
+            const count = document.getElementById('roleCount');
+            const totalRoles = window.allRoles.length;
             
             if (selectedRoles.size === 0) {
-                input.value = 'No roles selected';
-            } else if (selectedRoles.size === options.length - 2) { // -2 for Select All/Deselect All
-                input.value = 'All roles selected';
+                display.textContent = 'No roles selected';
+            } else if (selectedRoles.size === totalRoles) {
+                display.textContent = 'All roles selected';
+            } else if (selectedRoles.size === 1) {
+                display.textContent = Array.from(selectedRoles)[0];
             } else {
-                input.value = `${selectedRoles.size} roles selected`;
+                display.textContent = `${selectedRoles.size} roles selected`;
             }
             
-            // Update visual state of options
+            count.textContent = `${selectedRoles.size} of ${totalRoles} roles selected`;
+        }
+        
+        function updateRoleCheckboxes() {
+            const options = document.querySelectorAll('#roleOptions .multi-select-option');
             options.forEach(option => {
-                if (option.textContent !== 'Select All' && option.textContent !== 'Deselect All') {
-                    if (selectedRoles.has(option.textContent)) {
-                        option.classList.add('selected');
-                    } else {
-                        option.classList.remove('selected');
-                    }
+                const role = option.dataset.role;
+                const checkbox = option.querySelector('.multi-select-checkbox');
+                checkbox.checked = selectedRoles.has(role);
+                
+                if (selectedRoles.has(role)) {
+                    option.classList.add('selected');
+                } else {
+                    option.classList.remove('selected');
+                }
+            });
+        }
+        
+        function searchRoles() {
+            const searchTerm = document.getElementById('roleSearchInput').value.toLowerCase();
+            const options = document.querySelectorAll('#roleOptions .multi-select-option');
+            
+            options.forEach(option => {
+                const role = option.dataset.role.toLowerCase();
+                if (role.includes(searchTerm)) {
+                    option.classList.remove('hidden');
+                } else {
+                    option.classList.add('hidden');
                 }
             });
         }
         
         function toggleRoleDropdown() {
             const dropdown = document.getElementById('roleDropdown');
-            dropdown.classList.toggle('show');
+            const arrow = document.getElementById('roleArrow');
+            const isOpen = dropdown.classList.contains('show');
+            
+            if (isOpen) {
+                dropdown.classList.remove('show');
+                arrow.classList.remove('open');
+                // Clear search when closing
+                document.getElementById('roleSearchInput').value = '';
+                searchRoles();
+            } else {
+                dropdown.classList.add('show');
+                arrow.classList.add('open');
+                // Focus search input when opening
+                setTimeout(() => {
+                    document.getElementById('roleSearchInput').focus();
+                }, 100);
+            }
         }
         
         // Close dropdown when clicking outside
         document.addEventListener('click', function(event) {
             if (!event.target.closest('.multi-select')) {
-                document.getElementById('roleDropdown').classList.remove('show');
+                const dropdown = document.getElementById('roleDropdown');
+                const arrow = document.getElementById('roleArrow');
+                dropdown.classList.remove('show');
+                arrow.classList.remove('open');
+                // Clear search when closing
+                document.getElementById('roleSearchInput').value = '';
+                searchRoles();
             }
         });
         
@@ -695,9 +900,14 @@ def get_javascript_functions():
             document.getElementById('connectionSlider').value = 1;
             document.getElementById('connectionValue').textContent = '1';
             
-            const roles = [...new Set(fullNetworkData.links.flatMap(link => link.roles || []))];
-            selectedRoles = new Set(roles);
+            // Reset role filter
+            selectedRoles = new Set(window.allRoles);
             updateRoleFilterDisplay();
+            updateRoleCheckboxes();
+            
+            // Clear role search
+            document.getElementById('roleSearchInput').value = '';
+            searchRoles();
             
             currentData = JSON.parse(JSON.stringify(fullNetworkData));
             updateChart();
