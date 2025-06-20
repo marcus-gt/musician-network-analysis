@@ -523,9 +523,9 @@ def get_html_template():
             font-size: 14px;
             margin-bottom: 15px;
             padding: 10px;
-            background: #4a4a1a;
+            background: #1a4d7a;
             border-radius: 4px;
-            border: 1px solid #666633;
+            border: 1px solid #0066cc;
         }
         
         .filters-section {
