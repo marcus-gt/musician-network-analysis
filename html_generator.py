@@ -612,7 +612,15 @@ def get_html_template():
         <div class="analysis-grid">
             <div class="chart-container">
                 <h3>Most Active Musicians</h3>
-                <div id="topMusiciansChart" style="width: 100%; height: 400px;"></div>
+                <div style="margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px; font-size: 14px;">
+                    <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: center;">
+                        <div><strong>Bar Colors:</strong> Gradient by Ranking</div>
+                        <div><strong>Interaction:</strong> 
+                            Hover for details | Click for full info
+                        </div>
+                    </div>
+                </div>
+                <div id="topMusiciansChart" style="width: 100%; height: 500px;"></div>
             </div>
             
             <div class="chart-container">
