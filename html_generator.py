@@ -617,7 +617,17 @@ def get_html_template():
             
             <div class="chart-container">
                 <h3>Main Artist vs Session Work</h3>
-                <canvas id="sessionScatterChart" width="400" height="300"></canvas>
+                <div style="margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px; font-size: 14px;">
+                    <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: center;">
+                        <div><strong>Bubble Size:</strong> Total Records</div>
+                        <div><strong>Categories:</strong> 
+                            <span style="color: #e74c3c;">●</span> Session Only | 
+                            <span style="color: #f39c12;">●</span> Balanced | 
+                            <span style="color: #27ae60;">●</span> Main Artist Only
+                        </div>
+                    </div>
+                </div>
+                <div id="sessionScatterChart" style="width: 100%; height: 500px;"></div>
             </div>
         </div>
         
@@ -1642,54 +1652,222 @@ def get_javascript_functions():
             });
             
             // Update or create scatter plot
-            const ctx2 = document.getElementById('sessionScatterChart').getContext('2d');
+            const chartContainer = document.getElementById('sessionScatterChart');
             if (window.sessionScatterChart) {
-                window.sessionScatterChart.destroy();
+                window.sessionScatterChart.dispose();
             }
             
-            window.sessionScatterChart = new Chart(ctx2, {
-                type: 'scatter',
-                data: {
-                    datasets: [{
-                        label: 'Musicians',
-                        data: filteredStats.map(m => ({
-                            x: m.as_main_artist,
-                            y: m.as_session_musician,
-                            musician: m.musician,
-                            total: m.total_records
-                        })),
-                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        pointRadius: function(context) {
-                            return Math.max(3, context.raw.total * 0.5);
-                        }
-                    }]
+            // Categorize musicians for better visualization
+            const pureSessionMusicians = filteredStats.filter(m => m.as_main_artist === 0 && m.as_session_musician > 0);
+            const balancedMusicians = filteredStats.filter(m => m.as_main_artist > 0 && m.as_session_musician > 0);
+            const pureMainArtists = filteredStats.filter(m => m.as_main_artist > 0 && m.as_session_musician === 0);
+            
+            // Helper function to get size based on total records
+            function getSizeByTotal(total, maxTotal) {
+                const minSize = 8;
+                const maxSize = 40;
+                const normalizedTotal = total / Math.max(maxTotal, 1);
+                return minSize + (maxSize - minSize) * Math.sqrt(normalizedTotal);
+            }
+            
+            // Helper function to get color intensity based on total records
+            function getColorIntensity(total, maxTotal) {
+                return Math.sqrt(total / Math.max(maxTotal, 1)); // Use square root for better distribution
+            }
+            
+            const maxTotal = Math.max(...filteredStats.map(m => m.total_records));
+            
+            // Prepare data for ECharts
+            const scatterData = [
+                {
+                    name: 'Pure Session Musicians',
+                    type: 'scatter',
+                    data: pureSessionMusicians.map(m => [
+                        m.as_main_artist,
+                        m.as_session_musician,
+                        getSizeByTotal(m.total_records, maxTotal),
+                        m.musician,
+                        m.total_records,
+                        m.session_ratio
+                    ]),
+                    itemStyle: {
+                        color: '#e74c3c',
+                        opacity: 0.8
+                    }
                 },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return `${context.raw.musician}: ${context.raw.total} total records`;
-                                }
-                            }
-                        }
+                {
+                    name: 'Balanced Artists',
+                    type: 'scatter',
+                    data: balancedMusicians.map(m => [
+                        m.as_main_artist,
+                        m.as_session_musician,
+                        getSizeByTotal(m.total_records, maxTotal),
+                        m.musician,
+                        m.total_records,
+                        m.session_ratio
+                    ]),
+                    itemStyle: {
+                        color: '#f39c12',
+                        opacity: 0.8
+                    }
+                },
+                {
+                    name: 'Pure Main Artists',
+                    type: 'scatter',
+                    data: pureMainArtists.map(m => [
+                        m.as_main_artist,
+                        m.as_session_musician,
+                        getSizeByTotal(m.total_records, maxTotal),
+                        m.musician,
+                        m.total_records,
+                        m.session_ratio
+                    ]),
+                    itemStyle: {
+                        color: '#27ae60',
+                        opacity: 0.8
+                    }
+                }
+            ];
+            
+            // Create enhanced scatter plot with beautiful gradient bubbles
+            const allData = [...pureSessionMusicians, ...balancedMusicians, ...pureMainArtists];
+            const bubbleData = allData.map(m => {
+                const intensity = getColorIntensity(m.total_records, maxTotal);
+                return [
+                    m.as_main_artist,
+                    m.as_session_musician,
+                    getSizeByTotal(m.total_records, maxTotal),
+                    m.musician,
+                    m.total_records,
+                    m.session_ratio,
+                    intensity
+                ];
+            });
+            
+            window.sessionScatterChart = echarts.init(chartContainer);
+            
+            const option = {
+                backgroundColor: '#fafafa',
+                title: {
+                    text: 'Main Artist vs Session Work Analysis',
+                    left: 'center',
+                    textStyle: {
+                        fontSize: 18,
+                        fontWeight: 'bold',
+                        color: '#333'
+                    }
+                },
+                tooltip: {
+                    trigger: 'item',
+                    formatter: function(params) {
+                        const data = params.data;
+                        return `
+                            <div style="font-weight: bold; margin-bottom: 8px;">${data[3]}</div>
+                            <div>Total Records: <span style="color: #e74c3c; font-weight: bold;">${data[4]}</span></div>
+                            <div>Main Artist: <span style="color: #27ae60; font-weight: bold;">${data[0]}</span></div>
+                            <div>Session Work: <span style="color: #3498db; font-weight: bold;">${data[1]}</span></div>
+                            <div>Session Ratio: <span style="color: #f39c12; font-weight: bold;">${(data[5] * 100).toFixed(1)}%</span></div>
+                            <div style="margin-top: 8px; font-size: 12px; color: #666;">Click for detailed view</div>
+                        `;
                     },
-                    scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Records as Main Artist'
-                            }
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    borderColor: '#ddd',
+                    borderWidth: 1,
+                    textStyle: {
+                        color: '#333'
+                    }
+                },
+                legend: {
+                    data: ['Pure Session Musicians', 'Balanced Artists', 'Pure Main Artists'],
+                    top: '8%',
+                    left: 'center',
+                    textStyle: {
+                        fontSize: 12
+                    }
+                },
+                grid: {
+                    left: '10%',
+                    right: '10%',
+                    bottom: '15%',
+                    top: '20%'
+                },
+                xAxis: {
+                    type: 'value',
+                    name: 'Records as Main Artist',
+                    nameLocation: 'middle',
+                    nameGap: 30,
+                    nameTextStyle: {
+                        fontSize: 14,
+                        fontWeight: 'bold'
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: '#e0e0e0'
+                        }
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: 'Records as Session Musician',
+                    nameLocation: 'middle',
+                    nameGap: 40,
+                    nameTextStyle: {
+                        fontSize: 14,
+                        fontWeight: 'bold'
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: '#e0e0e0'
+                        }
+                    }
+                },
+                series: [
+                    {
+                        name: 'Musicians',
+                        type: 'scatter',
+                        data: bubbleData,
+                        symbolSize: function(data) {
+                            return data[2]; // Size from our calculation
                         },
-                        y: {
-                            title: {
-                                display: true,
-                                text: 'Records as Session Musician'
+                        itemStyle: {
+                            color: function(params) {
+                                const intensity = params.data[6]; // Intensity value
+                                // Create a beautiful blue to purple gradient based on activity
+                                const r = Math.floor(52 + intensity * 100);  // 52 to 152
+                                const g = Math.floor(152 - intensity * 50);  // 152 to 102  
+                                const b = Math.floor(219 - intensity * 20);  // 219 to 199
+                                return `rgba(${r}, ${g}, ${b}, 0.8)`;
+                            },
+                            borderColor: '#fff',
+                            borderWidth: 2
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                borderColor: '#333',
+                                borderWidth: 3
                             }
                         }
                     }
+                ],
+                animation: true,
+                animationDuration: 1000,
+                animationEasing: 'cubicOut'
+            };
+            
+            window.sessionScatterChart.setOption(option);
+            
+            // Add click handler for detailed view
+            window.sessionScatterChart.on('click', function(params) {
+                if (params.componentType === 'series') {
+                    const data = params.data;
+                    const musicianData = {
+                        musician: data[3],
+                        total: data[4],
+                        x: data[0],
+                        y: data[1],
+                        sessionRatio: data[5]
+                    };
+                    showMusicianScatterDetails(musicianData);
                 }
             });
             
@@ -1712,6 +1890,81 @@ def get_javascript_functions():
                 `;
                 listContainer.appendChild(item);
             });
+        }
+        
+        function showMusicianScatterDetails(musicianData) {
+            // Create a modal-like overlay to show detailed information
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.7);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 1000;
+            `;
+            
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                background: white;
+                padding: 30px;
+                border-radius: 10px;
+                max-width: 500px;
+                width: 90%;
+                max-height: 80vh;
+                overflow-y: auto;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            `;
+            
+            // Find the full musician data
+            const fullMusicianData = musicianStatsData.find(m => m.musician === musicianData.musician);
+            
+            modal.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="margin: 0; color: #333;">${musicianData.musician}</h2>
+                    <button id="closeModal" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">&times;</button>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                        <div style="font-size: 24px; font-weight: bold; color: #e74c3c;">${musicianData.total}</div>
+                        <div style="color: #666;">Total Records</div>
+                    </div>
+                    <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                        <div style="font-size: 24px; font-weight: bold; color: #f39c12;">${(musicianData.sessionRatio * 100).toFixed(1)}%</div>
+                        <div style="color: #666;">Session Work</div>
+                    </div>
+                    <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                        <div style="font-size: 24px; font-weight: bold; color: #27ae60;">${musicianData.x}</div>
+                        <div style="color: #666;">Main Artist</div>
+                    </div>
+                    <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                        <div style="font-size: 24px; font-weight: bold; color: #3498db;">${musicianData.y}</div>
+                        <div style="color: #666;">Session Work</div>
+                    </div>
+                </div>
+                ${fullMusicianData && fullMusicianData.records ? `
+                    <div>
+                        <h3 style="margin-bottom: 10px;">Albums (${fullMusicianData.records.length})</h3>
+                        <div style="max-height: 200px; overflow-y: auto; background: #f8f9fa; padding: 10px; border-radius: 5px;">
+                            ${fullMusicianData.records.slice(0, 20).map(record => `<div style="margin-bottom: 5px;">• ${record}</div>`).join('')}
+                            ${fullMusicianData.records.length > 20 ? `<div style="margin-top: 10px; font-style: italic; color: #666;">... and ${fullMusicianData.records.length - 20} more albums</div>` : ''}
+                        </div>
+                    </div>
+                ` : ''}
+            `;
+            
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+            
+            // Close modal handlers
+            document.getElementById('closeModal').onclick = () => document.body.removeChild(overlay);
+            overlay.onclick = (e) => {
+                if (e.target === overlay) document.body.removeChild(overlay);
+            };
         }
         
         // Session Musicians Tab
