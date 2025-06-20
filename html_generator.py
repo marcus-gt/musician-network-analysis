@@ -1977,7 +1977,26 @@ def get_javascript_functions():
                     }
                 },
                 legend: {
-                    data: ['Pure Session Musicians', 'Balanced Artists', 'Pure Main Artists'],
+                    data: [
+                        {
+                            name: 'Pure Session Musicians',
+                            itemStyle: {
+                                color: 'rgba(231, 76, 60, 0.8)'  // Red to match the series
+                            }
+                        },
+                        {
+                            name: 'Balanced Artists', 
+                            itemStyle: {
+                                color: 'rgba(243, 156, 18, 0.8)'  // Orange to match the series
+                            }
+                        },
+                        {
+                            name: 'Pure Main Artists',
+                            itemStyle: {
+                                color: 'rgba(39, 174, 96, 0.8)'  // Green to match the series
+                            }
+                        }
+                    ],
                     top: '5%',
                     textStyle: {
                         color: '#e0e0e0'
@@ -2060,12 +2079,13 @@ def get_javascript_functions():
                                 const alpha = 0.6 + intensity * 0.4; // 0.6 to 1.0
                                 return `rgba(${baseR}, ${baseG}, ${baseB}, ${alpha})`;
                             },
-                            borderWidth: 0
+                            borderWidth: 1,
+                            borderColor: '#8b0000'  // Dark red for Pure Session Musicians
                         },
                         emphasis: {
                             itemStyle: {
-                                borderColor: '#c0392b',
-                                borderWidth: 3
+                                borderColor: '#8b0000',  // Dark red border
+                                borderWidth: 1
                             }
                         }
                     },
@@ -2091,12 +2111,13 @@ def get_javascript_functions():
                                 const alpha = 0.6 + intensity * 0.4; // 0.6 to 1.0
                                 return `rgba(${baseR}, ${baseG}, ${baseB}, ${alpha})`;
                             },
-                            borderWidth: 0
+                            borderWidth: 1,
+                            borderColor: '#b8860b'  // Dark orange for Balanced Artists  
                         },
                         emphasis: {
                             itemStyle: {
-                                borderColor: '#d68910',
-                                borderWidth: 3
+                                borderColor: '#b8860b',  // Dark orange border
+                                borderWidth: 1
                             }
                         }
                     },
@@ -2122,12 +2143,13 @@ def get_javascript_functions():
                                 const alpha = 0.6 + intensity * 0.4; // 0.6 to 1.0
                                 return `rgba(${baseR}, ${baseG}, ${baseB}, ${alpha})`;
                             },
-                            borderWidth: 0
+                            borderWidth: 1,
+                            borderColor: '#006400'  // Dark green for Pure Main Artists
                         },
                         emphasis: {
                             itemStyle: {
-                                borderColor: '#229954',
-                                borderWidth: 3
+                                borderColor: '#006400',  // Dark green border  
+                                borderWidth: 1
                             }
                         }
                     }
