@@ -1677,73 +1677,6 @@ def get_javascript_functions():
             
             const maxTotal = Math.max(...filteredStats.map(m => m.total_records));
             
-            // Prepare data for ECharts
-            const scatterData = [
-                {
-                    name: 'Pure Session Musicians',
-                    type: 'scatter',
-                    data: pureSessionMusicians.map(m => [
-                        m.as_main_artist,
-                        m.as_session_musician,
-                        getSizeByTotal(m.total_records, maxTotal),
-                        m.musician,
-                        m.total_records,
-                        m.session_ratio
-                    ]),
-                    itemStyle: {
-                        color: '#e74c3c',
-                        opacity: 0.8
-                    }
-                },
-                {
-                    name: 'Balanced Artists',
-                    type: 'scatter',
-                    data: balancedMusicians.map(m => [
-                        m.as_main_artist,
-                        m.as_session_musician,
-                        getSizeByTotal(m.total_records, maxTotal),
-                        m.musician,
-                        m.total_records,
-                        m.session_ratio
-                    ]),
-                    itemStyle: {
-                        color: '#f39c12',
-                        opacity: 0.8
-                    }
-                },
-                {
-                    name: 'Pure Main Artists',
-                    type: 'scatter',
-                    data: pureMainArtists.map(m => [
-                        m.as_main_artist,
-                        m.as_session_musician,
-                        getSizeByTotal(m.total_records, maxTotal),
-                        m.musician,
-                        m.total_records,
-                        m.session_ratio
-                    ]),
-                    itemStyle: {
-                        color: '#27ae60',
-                        opacity: 0.8
-                    }
-                }
-            ];
-            
-            // Create enhanced scatter plot with beautiful gradient bubbles
-            const allData = [...pureSessionMusicians, ...balancedMusicians, ...pureMainArtists];
-            const bubbleData = allData.map(m => {
-                const intensity = getColorIntensity(m.total_records, maxTotal);
-                return [
-                    m.as_main_artist,
-                    m.as_session_musician,
-                    getSizeByTotal(m.total_records, maxTotal),
-                    m.musician,
-                    m.total_records,
-                    m.session_ratio,
-                    intensity
-                ];
-            });
-            
             window.sessionScatterChart = echarts.init(chartContainer);
             
             const option = {
@@ -1763,6 +1696,7 @@ def get_javascript_functions():
                         const data = params.data;
                         return `
                             <div style="font-weight: bold; margin-bottom: 8px;">${data[3]}</div>
+                            <div>Category: <span style="color: #666; font-weight: bold;">${params.seriesName}</span></div>
                             <div>Total Records: <span style="color: #e74c3c; font-weight: bold;">${data[4]}</span></div>
                             <div>Main Artist: <span style="color: #27ae60; font-weight: bold;">${data[0]}</span></div>
                             <div>Session Work: <span style="color: #3498db; font-weight: bold;">${data[1]}</span></div>
@@ -1823,27 +1757,97 @@ def get_javascript_functions():
                 },
                 series: [
                     {
-                        name: 'Musicians',
+                        name: 'Pure Session Musicians',
                         type: 'scatter',
-                        data: bubbleData,
+                        data: pureSessionMusicians.map(m => [
+                            m.as_main_artist,
+                            m.as_session_musician,
+                            getSizeByTotal(m.total_records, maxTotal),
+                            m.musician,
+                            m.total_records,
+                            m.session_ratio
+                        ]),
                         symbolSize: function(data) {
                             return data[2]; // Size from our calculation
                         },
                         itemStyle: {
                             color: function(params) {
-                                const intensity = params.data[6]; // Intensity value
-                                // Create a beautiful blue to purple gradient based on activity
-                                const r = Math.floor(52 + intensity * 100);  // 52 to 152
-                                const g = Math.floor(152 - intensity * 50);  // 152 to 102  
-                                const b = Math.floor(219 - intensity * 20);  // 219 to 199
-                                return `rgba(${r}, ${g}, ${b}, 0.8)`;
+                                const intensity = getColorIntensity(params.data[4], maxTotal);
+                                // Red gradient for session musicians
+                                const baseR = 231, baseG = 76, baseB = 60;
+                                const alpha = 0.6 + intensity * 0.4; // 0.6 to 1.0
+                                return `rgba(${baseR}, ${baseG}, ${baseB}, ${alpha})`;
                             },
                             borderColor: '#fff',
                             borderWidth: 2
                         },
                         emphasis: {
                             itemStyle: {
-                                borderColor: '#333',
+                                borderColor: '#c0392b',
+                                borderWidth: 3
+                            }
+                        }
+                    },
+                    {
+                        name: 'Balanced Artists',
+                        type: 'scatter',
+                        data: balancedMusicians.map(m => [
+                            m.as_main_artist,
+                            m.as_session_musician,
+                            getSizeByTotal(m.total_records, maxTotal),
+                            m.musician,
+                            m.total_records,
+                            m.session_ratio
+                        ]),
+                        symbolSize: function(data) {
+                            return data[2]; // Size from our calculation
+                        },
+                        itemStyle: {
+                            color: function(params) {
+                                const intensity = getColorIntensity(params.data[4], maxTotal);
+                                // Orange gradient for balanced artists
+                                const baseR = 243, baseG = 156, baseB = 18;
+                                const alpha = 0.6 + intensity * 0.4; // 0.6 to 1.0
+                                return `rgba(${baseR}, ${baseG}, ${baseB}, ${alpha})`;
+                            },
+                            borderColor: '#fff',
+                            borderWidth: 2
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                borderColor: '#d68910',
+                                borderWidth: 3
+                            }
+                        }
+                    },
+                    {
+                        name: 'Pure Main Artists',
+                        type: 'scatter',
+                        data: pureMainArtists.map(m => [
+                            m.as_main_artist,
+                            m.as_session_musician,
+                            getSizeByTotal(m.total_records, maxTotal),
+                            m.musician,
+                            m.total_records,
+                            m.session_ratio
+                        ]),
+                        symbolSize: function(data) {
+                            return data[2]; // Size from our calculation
+                        },
+                        itemStyle: {
+                            color: function(params) {
+                                const intensity = getColorIntensity(params.data[4], maxTotal);
+                                // Green gradient for main artists
+                                const baseR = 39, baseG = 174, baseB = 96;
+                                const alpha = 0.6 + intensity * 0.4; // 0.6 to 1.0
+                                return `rgba(${baseR}, ${baseG}, ${baseB}, ${alpha})`;
+                            },
+                            borderColor: '#fff',
+                            borderWidth: 2
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                borderColor: '#229954',
                                 borderWidth: 3
                             }
                         }
