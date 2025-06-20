@@ -1632,15 +1632,6 @@ def get_javascript_functions():
             
             const barOption = {
                 backgroundColor: '#fafafa',
-                title: {
-                    text: 'Most Active Musicians',
-                    left: 'center',
-                    textStyle: {
-                        fontSize: 18,
-                        fontWeight: 'bold',
-                        color: '#333'
-                    }
-                },
                 tooltip: {
                     trigger: 'axis',
                     axisPointer: {
@@ -1669,7 +1660,7 @@ def get_javascript_functions():
                     left: '15%',
                     right: '10%',
                     bottom: '10%',
-                    top: '15%'
+                    top: '5%'
                 },
                 xAxis: {
                     type: 'value',
@@ -1704,19 +1695,21 @@ def get_javascript_functions():
                 series: [{
                     name: 'Total Records',
                     type: 'bar',
-                    data: topMusicians.map((m, index) => ({
-                        value: m.total_records,
-                        itemStyle: {
-                            color: function() {
-                                // Create a gradient from blue to purple based on position
-                                const ratio = index / Math.max(topMusicians.length - 1, 1);
-                                const r = Math.floor(52 + ratio * 100);   // 52 to 152
-                                const g = Math.floor(152 - ratio * 50);   // 152 to 102
-                                const b = Math.floor(219 - ratio * 20);   // 219 to 199
-                                return `rgba(${r}, ${g}, ${b}, 0.8)`;
+                    data: topMusicians.map((m, index) => {
+                        // Create a gradient from blue to purple based on position
+                        const ratio = index / Math.max(topMusicians.length - 1, 1);
+                        const r = Math.floor(52 + ratio * 100);   // 52 to 152
+                        const g = Math.floor(152 - ratio * 50);   // 152 to 102
+                        const b = Math.floor(219 - ratio * 20);   // 219 to 199
+                        const color = `rgba(${r}, ${g}, ${b}, 0.8)`;
+                        
+                        return {
+                            value: m.total_records,
+                            itemStyle: {
+                                color: color
                             }
-                        }
-                    })),
+                        };
+                    }),
                     barWidth: '60%',
                     emphasis: {
                         itemStyle: {
@@ -1780,15 +1773,6 @@ def get_javascript_functions():
             
             const option = {
                 backgroundColor: '#fafafa',
-                title: {
-                    text: 'Main Artist vs Session Work Analysis',
-                    left: 'center',
-                    textStyle: {
-                        fontSize: 18,
-                        fontWeight: 'bold',
-                        color: '#333'
-                    }
-                },
                         tooltip: {
                     trigger: 'item',
                     formatter: function(params) {
@@ -1822,7 +1806,7 @@ def get_javascript_functions():
                     left: '10%',
                     right: '10%',
                     bottom: '15%',
-                    top: '20%'
+                    top: '8%'
                 },
                 xAxis: {
                     type: 'value',
