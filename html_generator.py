@@ -612,7 +612,7 @@ def get_html_template():
         <div class="analysis-grid">
             <div class="chart-container">
                 <h3>Most Active Musicians</h3>
-                <canvas id="topMusiciansChart" width="400" height="300"></canvas>
+                <div id="topMusiciansChart" style="width: 100%; height: 400px;"></div>
             </div>
             
             <div class="chart-container">
@@ -631,10 +631,7 @@ def get_html_template():
             </div>
         </div>
         
-        <div class="chart-container">
-            <h3>Top Musicians List</h3>
-            <div id="topMusiciansList" class="musician-list"></div>
-        </div>
+
     </div>
     
     <!-- Session Musicians Tab -->
@@ -1618,36 +1615,130 @@ def get_javascript_functions():
             const topMusicians = filteredStats.sort((a, b) => b.total_records - a.total_records).slice(0, 15);
             
             // Update or create bar chart
-            const ctx1 = document.getElementById('topMusiciansChart').getContext('2d');
+            const barChartContainer = document.getElementById('topMusiciansChart');
             if (window.topMusiciansChart) {
-                window.topMusiciansChart.destroy();
+                window.topMusiciansChart.dispose();
             }
             
-            window.topMusiciansChart = new Chart(ctx1, {
-                type: 'bar',
-                data: {
-                    labels: topMusicians.map(m => m.musician),
-                    datasets: [{
-                        label: 'Total Records',
-                        data: topMusicians.map(m => m.total_records),
-                        backgroundColor: 'rgba(54, 162, 235, 0.8)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 1
-                    }]
+            window.topMusiciansChart = echarts.init(barChartContainer);
+            
+            const barOption = {
+                backgroundColor: '#fafafa',
+                title: {
+                    text: 'Most Active Musicians',
+                    left: 'center',
+                    textStyle: {
+                        fontSize: 18,
+                        fontWeight: 'bold',
+                        color: '#333'
+                    }
                 },
-                options: {
-                    responsive: true,
-                    indexAxis: 'y',
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
                     },
-                    scales: {
-                        x: {
-                            beginAtZero: true
+                    formatter: function(params) {
+                        const data = params[0];
+                        const musician = topMusicians[data.dataIndex];
+                        return `
+                            <div style="font-weight: bold; margin-bottom: 8px;">${data.name}</div>
+                            <div>Total Records: <span style="color: #3498db; font-weight: bold;">${data.value}</span></div>
+                            <div>Main Artist: <span style="color: #27ae60; font-weight: bold;">${musician.as_main_artist}</span></div>
+                            <div>Session Work: <span style="color: #e74c3c; font-weight: bold;">${musician.as_session_musician}</span></div>
+                            <div>Session Ratio: <span style="color: #f39c12; font-weight: bold;">${(musician.session_ratio * 100).toFixed(1)}%</span></div>
+                            <div style="margin-top: 8px; font-size: 12px; color: #666;">Click for detailed view</div>
+                        `;
+                    },
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    borderColor: '#ddd',
+                    borderWidth: 1,
+                    textStyle: {
+                        color: '#333'
+                    }
+                },
+                grid: {
+                    left: '15%',
+                    right: '10%',
+                    bottom: '10%',
+                    top: '15%'
+                },
+                xAxis: {
+                    type: 'value',
+                    name: 'Total Records',
+                    nameLocation: 'middle',
+                    nameGap: 30,
+                    nameTextStyle: {
+                        fontSize: 12,
+                        fontWeight: 'bold'
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: '#e0e0e0'
                         }
                     }
+                },
+                yAxis: {
+                    type: 'category',
+                    data: topMusicians.map(m => m.musician),
+                    axisLabel: {
+                        fontSize: 11,
+                        interval: 0,
+                        formatter: function(value) {
+                            // Truncate long names
+                            return value.length > 20 ? value.substring(0, 20) + '...' : value;
+                        }
+                    },
+                    axisTick: {
+                        alignWithLabel: true
+                    }
+                },
+                series: [{
+                    name: 'Total Records',
+                    type: 'bar',
+                    data: topMusicians.map((m, index) => ({
+                        value: m.total_records,
+                        itemStyle: {
+                            color: function() {
+                                // Create a gradient from blue to purple based on position
+                                const ratio = index / Math.max(topMusicians.length - 1, 1);
+                                const r = Math.floor(52 + ratio * 100);   // 52 to 152
+                                const g = Math.floor(152 - ratio * 50);   // 152 to 102
+                                const b = Math.floor(219 - ratio * 20);   // 219 to 199
+                                return `rgba(${r}, ${g}, ${b}, 0.8)`;
+                            }
+                        }
+                    })),
+                    barWidth: '60%',
+                    emphasis: {
+                        itemStyle: {
+                            shadowBlur: 10,
+                            shadowColor: 'rgba(0, 0, 0, 0.3)'
+                        }
+                    },
+                    animationDelay: function(idx) {
+                        return idx * 50; // Staggered animation
+                    }
+                }],
+                animation: true,
+                animationDuration: 1000,
+                animationEasing: 'cubicOut'
+            };
+            
+            window.topMusiciansChart.setOption(barOption);
+            
+            // Add click handler for detailed view
+            window.topMusiciansChart.on('click', function(params) {
+                if (params.componentType === 'series') {
+                    const musician = topMusicians[params.dataIndex];
+                    const musicianData = {
+                        musician: musician.musician,
+                        total: musician.total_records,
+                        x: musician.as_main_artist,
+                        y: musician.as_session_musician,
+                        sessionRatio: musician.session_ratio
+                    };
+                    showMusicianScatterDetails(musicianData);
                 }
             });
             
@@ -1690,7 +1781,7 @@ def get_javascript_functions():
                         color: '#333'
                     }
                 },
-                tooltip: {
+                        tooltip: {
                     trigger: 'item',
                     formatter: function(params) {
                         const data = params.data;
@@ -1875,25 +1966,7 @@ def get_javascript_functions():
                 }
             });
             
-            // Update musicians list
-            const listContainer = document.getElementById('topMusiciansList');
-            listContainer.innerHTML = ''; // Clear existing content
-            
-            topMusicians.forEach(musician => {
-                const item = document.createElement('div');
-                item.className = 'musician-item';
-                item.innerHTML = `
-                    <div>
-                        <div class="musician-name">${musician.musician}</div>
-                        <div class="musician-stats">
-                            Total: ${musician.total_records} | 
-                            Main Artist: ${musician.as_main_artist} | 
-                            Session: ${musician.as_session_musician}
-                        </div>
-                    </div>
-                `;
-                listContainer.appendChild(item);
-            });
+
         }
         
         function showMusicianScatterDetails(musicianData) {
