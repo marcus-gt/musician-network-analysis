@@ -22,18 +22,19 @@ def get_html_template():
             margin: 0;
             padding: 20px;
             font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
         }
         .header {
             text-align: center;
             margin-bottom: 30px;
         }
         .title {
-            color: #333;
+            color: #ffffff;
             margin-bottom: 10px;
         }
         .subtitle {
-            color: #666;
+            color: #b0b0b0;
             font-size: 14px;
         }
         
@@ -43,38 +44,39 @@ def get_html_template():
         }
         .tab-nav {
             display: flex;
-            background: white;
+            background: #2d2d2d;
             border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
             overflow: hidden;
         }
         .tab-btn {
             flex: 1;
             padding: 15px 20px;
             border: none;
-            background: white;
+            background: #2d2d2d;
+            color: #e0e0e0;
             cursor: pointer;
             transition: all 0.3s ease;
             font-size: 14px;
             font-weight: 500;
         }
         .tab-btn:hover {
-            background: #f8f9fa;
+            background: #3a3a3a;
         }
         .tab-btn.active {
-            background: #007bff;
+            background: #0066cc;
             color: white;
         }
         .tab-btn:not(:last-child) {
-            border-right: 1px solid #e9ecef;
+            border-right: 1px solid #404040;
         }
         
         /* Tab Content */
         .tab-content {
             display: none;
-            background: white;
+            background: #2d2d2d;
             border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
             padding: 20px;
         }
         .tab-content.active {
@@ -85,9 +87,9 @@ def get_html_template():
         #container {
             width: 100%;
             height: 800px;
-            background-color: white;
+            background-color: #1e1e1e;
             border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
         
         .controls {
@@ -107,14 +109,16 @@ def get_html_template():
         .control-group label {
             font-size: 12px;
             font-weight: bold;
-            color: #333;
+            color: #e0e0e0;
         }
         
         select, input[type="range"] {
             padding: 8px 12px;
-            border: 1px solid #ddd;
+            border: 1px solid #555;
             border-radius: 4px;
             font-size: 14px;
+            background: #3a3a3a;
+            color: #e0e0e0;
         }
         
         .multi-select {
@@ -125,24 +129,25 @@ def get_html_template():
         .multi-select-input {
             width: 100%;
             padding: 8px 12px;
-            border: 1px solid #ddd;
+            border: 1px solid #555;
             border-radius: 4px;
             font-size: 14px;
             cursor: pointer;
-            background: white;
+            background: #3a3a3a;
+            color: #e0e0e0;
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
         
         .multi-select-input:hover {
-            border-color: #007bff;
+            border-color: #0066cc;
         }
         
         .multi-select-arrow {
             margin-left: 8px;
             font-size: 12px;
-            color: #666;
+            color: #b0b0b0;
             transition: transform 0.2s;
         }
         
@@ -156,12 +161,12 @@ def get_html_template():
             top: 100%;
             left: 0;
             right: 0;
-            background: white;
-            border: 1px solid #ddd;
+            background: #3a3a3a;
+            border: 1px solid #555;
             border-radius: 4px;
             max-height: 400px;
             z-index: 1000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
             overflow: hidden;
         }
         
@@ -171,28 +176,30 @@ def get_html_template():
         
         .multi-select-search {
             padding: 12px;
-            border-bottom: 1px solid #e9ecef;
-            background: #f8f9fa;
+            border-bottom: 1px solid #555;
+            background: #2d2d2d;
         }
         
         .multi-select-search input {
             width: 100%;
             padding: 8px 12px;
-            border: 1px solid #ddd;
+            border: 1px solid #555;
             border-radius: 4px;
             font-size: 14px;
             outline: none;
+            background: #4a4a4a;
+            color: #e0e0e0;
         }
         
         .multi-select-search input:focus {
-            border-color: #007bff;
-            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+            border-color: #0066cc;
+            box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.25);
         }
         
         .multi-select-controls {
             padding: 8px 12px;
-            border-bottom: 1px solid #e9ecef;
-            background: #f8f9fa;
+            border-bottom: 1px solid #555;
+            background: #2d2d2d;
             display: flex;
             gap: 10px;
         }
@@ -200,16 +207,16 @@ def get_html_template():
         .multi-select-control-btn {
             padding: 4px 8px;
             font-size: 12px;
-            border: 1px solid #007bff;
-            background: white;
-            color: #007bff;
+            border: 1px solid #0066cc;
+            background: #3a3a3a;
+            color: #0066cc;
             border-radius: 3px;
             cursor: pointer;
             transition: all 0.2s;
         }
         
         .multi-select-control-btn:hover {
-            background: #007bff;
+            background: #0066cc;
             color: white;
         }
         
@@ -221,19 +228,20 @@ def get_html_template():
         .multi-select-option {
             padding: 10px 12px;
             cursor: pointer;
-            border-bottom: 1px solid #f0f0f0;
+            border-bottom: 1px solid #555;
             display: flex;
             align-items: center;
             transition: background-color 0.2s;
+            color: #e0e0e0;
         }
         
         .multi-select-option:hover {
-            background-color: #f8f9fa;
+            background-color: #4a4a4a;
         }
         
         .multi-select-option.selected {
-            background-color: #e3f2fd;
-            color: #1976d2;
+            background-color: #1a4d7a;
+            color: #66b3ff;
         }
         
         .multi-select-option.hidden {
@@ -249,10 +257,10 @@ def get_html_template():
         
         .multi-select-count {
             padding: 8px 12px;
-            background: #f8f9fa;
-            border-top: 1px solid #e9ecef;
+            background: #3a3a3a;
+            border-top: 1px solid #555;
             font-size: 12px;
-            color: #666;
+            color: #b0b0b0;
             text-align: center;
         }
         
@@ -286,9 +294,9 @@ def get_html_template():
             align-items: center;
             gap: 12px;
             padding: 12px;
-            background: #f8f9fa;
+            background: #3a3a3a;
             border-radius: 6px;
-            border: 1px solid #e9ecef;
+            border: 1px solid #555;
         }
         
         .custom-filter-column {
@@ -358,12 +366,12 @@ def get_html_template():
         .custom-filter-label {
             font-size: 12px;
             font-weight: bold;
-            color: #666;
+            color: #b0b0b0;
             margin-bottom: 4px;
         }
         
         .stats-panel {
-            background: #f8f9fa;
+            background: #3a3a3a;
             padding: 15px;
             border-radius: 6px;
             margin-bottom: 20px;
@@ -373,19 +381,19 @@ def get_html_template():
             display: inline-block;
             margin-right: 20px;
             font-size: 14px;
-            color: #666;
+            color: #b0b0b0;
         }
         
         .stats-value {
             font-weight: bold;
-            color: #333;
+            color: #ffffff;
         }
         
         .info-panel {
             margin-top: 20px;
-            background-color: white;
+            background-color: #2d2d2d;
             border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
             padding: 20px;
             display: none;
         }
@@ -400,8 +408,8 @@ def get_html_template():
         
         .info-section h4 {
             margin: 0 0 10px 0;
-            color: #333;
-            border-bottom: 2px solid #007bff;
+            color: #ffffff;
+            border-bottom: 2px solid #0066cc;
             padding-bottom: 5px;
         }
         
@@ -411,8 +419,8 @@ def get_html_template():
         
         .tag {
             display: inline-block;
-            background: #e3f2fd;
-            color: #1976d2;
+            background: #1a4d7a;
+            color: #66b3ff;
             padding: 4px 8px;
             margin: 2px;
             border-radius: 12px;
@@ -428,15 +436,15 @@ def get_html_template():
         }
         
         .chart-container {
-            background: white;
+            background: #2d2d2d;
             border-radius: 8px;
             padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
         
         .chart-container h3 {
             margin: 0 0 15px 0;
-            color: #333;
+            color: #ffffff;
         }
         
         .musician-list {
@@ -449,23 +457,23 @@ def get_html_template():
             justify-content: space-between;
             align-items: center;
             padding: 10px;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #555;
             cursor: pointer;
             transition: background-color 0.2s;
         }
         
         .musician-item:hover {
-            background-color: #f8f9fa;
+            background-color: #3a3a3a;
         }
         
         .musician-name {
             font-weight: 500;
-            color: #333;
+            color: #ffffff;
         }
         
         .musician-stats {
             font-size: 12px;
-            color: #666;
+            color: #b0b0b0;
         }
         
         .search-container {
@@ -475,13 +483,15 @@ def get_html_template():
         .search-input {
             width: 100%;
             padding: 12px;
-            border: 1px solid #ddd;
+            border: 1px solid #555;
             border-radius: 4px;
             font-size: 16px;
+            background: #3a3a3a;
+            color: #e0e0e0;
         }
         
         .debug-info {
-            background: #f8f9fa;
+            background: #3a3a3a;
             padding: 15px;
             border-radius: 6px;
             margin: 10px 0;
@@ -493,7 +503,7 @@ def get_html_template():
         
         .debug-section h4 {
             margin: 0 0 8px 0;
-            color: #333;
+            color: #ffffff;
         }
         
         .debug-list {
@@ -504,27 +514,91 @@ def get_html_template():
         
         .debug-list li {
             padding: 4px 0;
-            border-bottom: 1px solid #e9ecef;
+            border-bottom: 1px solid #555;
         }
         
         .click-hint {
             text-align: center;
-            color: #666;
+            color: #e0e0e0;
             font-size: 14px;
             margin-bottom: 15px;
             padding: 10px;
-            background: #fff3cd;
+            background: #4a4a1a;
             border-radius: 4px;
-            border: 1px solid #ffeaa7;
+            border: 1px solid #666633;
         }
         
         .filters-section {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
+            background: #2d2d2d;
+            border: 1px solid #555;
             border-radius: 8px;
             margin: 20px;
             padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        /* Additional dark mode styles */
+        button {
+            background: #0066cc;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background: #0052a3;
+        }
+        
+        .add-filter-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .add-filter-btn:hover {
+            background: #218838;
+        }
+        
+        .reset-button {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .reset-button:hover {
+            background: #c82333;
+        }
+        
+        .stats-panel {
+            background: #3a3a3a;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            border: 1px solid #555;
+        }
+        
+        .stats-item {
+            color: #b0b0b0;
+            font-size: 14px;
+        }
+        
+        .stats-value {
+            color: #ffffff;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -612,7 +686,7 @@ def get_html_template():
         <div class="analysis-grid">
             <div class="chart-container">
                 <h3>Most Active Musicians</h3>
-                <div style="margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px; font-size: 14px;">
+                <div style="margin-bottom: 15px; padding: 10px; background: #3a3a3a; border-radius: 5px; font-size: 14px; color: #e0e0e0;">
                     <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: center;">
                         <div><strong>Bar Colors:</strong> Gradient by Ranking</div>
                         <div><strong>Interaction:</strong> 
@@ -625,7 +699,7 @@ def get_html_template():
             
             <div class="chart-container">
                 <h3>Main Artist vs Session Work</h3>
-                <div style="margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px; font-size: 14px;">
+                <div style="margin-bottom: 15px; padding: 10px; background: #3a3a3a; border-radius: 5px; font-size: 14px; color: #e0e0e0;">
                     <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: center;">
                         <div><strong>Bubble Size:</strong> Total Records</div>
                         <div><strong>Categories:</strong> 
@@ -1505,7 +1579,11 @@ def get_javascript_functions():
                     left: 'center',
                     textStyle: {
                         fontSize: 18,
-                        fontWeight: 'bold'
+                        fontWeight: 'bold',
+                        color: '#ffffff'
+                    },
+                    subtextStyle: {
+                        color: '#b0b0b0'
                     }
                 },
                 tooltip: {
@@ -1544,7 +1622,10 @@ def get_javascript_functions():
                     top: '10%',
                     data: currentData.categories.map(function(a) {
                         return a.name;
-                    })
+                    }),
+                    textStyle: {
+                        color: '#e0e0e0'
+                    }
                 },
                 animationDuration: 1000,
                 animationEasingUpdate: 'quinticInOut',
@@ -1558,16 +1639,16 @@ def get_javascript_functions():
                     roam: true,
                     focusNodeAdjacency: true,
                     itemStyle: {
-                        borderColor: '#fff',
-                        borderWidth: 1,
+                        borderWidth: 0,
                         shadowBlur: 10,
-                        shadowColor: 'rgba(0, 0, 0, 0.3)'
+                        shadowColor: 'rgba(0, 0, 0, 0.5)'
                     },
                     label: {
                         show: true,
                         position: 'right',
                         formatter: '{b}',
-                        fontSize: 10
+                        fontSize: 10,
+                        color: '#ffffff'
                     },
                     lineStyle: {
                         color: 'source',
@@ -1632,7 +1713,7 @@ def get_javascript_functions():
             window.topMusiciansChart = echarts.init(barChartContainer);
             
             const barOption = {
-                backgroundColor: '#fafafa',
+                backgroundColor: '#1e1e1e',
                 tooltip: {
                     trigger: 'axis',
                     axisPointer: {
@@ -1650,11 +1731,11 @@ def get_javascript_functions():
                             <div style="margin-top: 8px; font-size: 12px; color: #666;">Click for detailed view</div>
                         `;
                     },
-                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                    borderColor: '#ddd',
+                    backgroundColor: 'rgba(45, 45, 45, 0.95)',
+                    borderColor: '#555',
                     borderWidth: 1,
                     textStyle: {
-                        color: '#333'
+                        color: '#e0e0e0'
                     }
                 },
                 grid: {
@@ -1670,11 +1751,20 @@ def get_javascript_functions():
                     nameGap: 30,
                     nameTextStyle: {
                         fontSize: 12,
-                        fontWeight: 'bold'
+                        fontWeight: 'bold',
+                        color: '#e0e0e0'
                     },
                     splitLine: {
                         lineStyle: {
-                            color: '#e0e0e0'
+                            color: '#404040'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#e0e0e0'
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#555'
                         }
                     }
                 },
@@ -1684,6 +1774,7 @@ def get_javascript_functions():
                     axisLabel: {
                         fontSize: 11,
                         interval: 0,
+                        color: '#e0e0e0',  // Add light color for dark mode
                         formatter: function(value) {
                             // Truncate long names
                             return value.length > 20 ? value.substring(0, 20) + '...' : value;
@@ -1691,6 +1782,11 @@ def get_javascript_functions():
                     },
                     axisTick: {
                         alignWithLabel: true
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#555'  // Add dark mode line color
+                        }
                     }
                 },
                 series: [{
@@ -1858,7 +1954,7 @@ def get_javascript_functions():
             window.sessionScatterChart = echarts.init(chartContainer);
             
             const option = {
-                backgroundColor: '#fafafa',
+                backgroundColor: '#1e1e1e',
                         tooltip: {
                     trigger: 'item',
                     formatter: function(params) {
@@ -1873,38 +1969,18 @@ def get_javascript_functions():
                             <div style="margin-top: 8px; font-size: 12px; color: #666;">Click for detailed view</div>
                         `;
                     },
-                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                    borderColor: '#ddd',
+                    backgroundColor: 'rgba(45, 45, 45, 0.95)',
+                    borderColor: '#555',
                     borderWidth: 1,
                     textStyle: {
-                        color: '#333'
+                        color: '#e0e0e0'
                     }
                 },
                 legend: {
-                    data: [
-                        {
-                            name: 'Pure Session Musicians',
-                            itemStyle: {
-                                color: 'rgba(231, 76, 60, 0.8)' // Red to match the series
-                            }
-                        },
-                        {
-                            name: 'Balanced Artists',
-                            itemStyle: {
-                                color: 'rgba(243, 156, 18, 0.8)' // Orange to match the series
-                            }
-                        },
-                        {
-                            name: 'Pure Main Artists',
-                            itemStyle: {
-                                color: 'rgba(39, 174, 96, 0.8)' // Green to match the series
-                            }
-                        }
-                    ],
-                    top: '8%',
-                    left: 'center',
+                    data: ['Pure Session Musicians', 'Balanced Artists', 'Pure Main Artists'],
+                    top: '5%',
                     textStyle: {
-                        fontSize: 12
+                        color: '#e0e0e0'
                     }
                 },
                 grid: {
@@ -1915,31 +1991,49 @@ def get_javascript_functions():
                 },
                 xAxis: {
                     type: 'value',
-                    name: 'Records as Main Artist',
+                    name: 'Main Artist Records',
                     nameLocation: 'middle',
                     nameGap: 30,
                     nameTextStyle: {
-                        fontSize: 14,
-                        fontWeight: 'bold'
+                        fontSize: 12,
+                        fontWeight: 'bold',
+                        color: '#e0e0e0'
                     },
                     splitLine: {
                         lineStyle: {
-                            color: '#e0e0e0'
+                            color: '#404040'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#e0e0e0'
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#555'
                         }
                     }
                 },
                 yAxis: {
                     type: 'value',
-                    name: 'Records as Session Musician',
+                    name: 'Session Work Records',
                     nameLocation: 'middle',
-                    nameGap: 40,
+                    nameGap: 50,
                     nameTextStyle: {
-                        fontSize: 14,
-                        fontWeight: 'bold'
+                        fontSize: 12,
+                        fontWeight: 'bold',
+                        color: '#e0e0e0'
                     },
                     splitLine: {
                         lineStyle: {
-                            color: '#e0e0e0'
+                            color: '#404040'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#e0e0e0'
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#555'
                         }
                     }
                 },
@@ -1966,8 +2060,7 @@ def get_javascript_functions():
                                 const alpha = 0.6 + intensity * 0.4; // 0.6 to 1.0
                                 return `rgba(${baseR}, ${baseG}, ${baseB}, ${alpha})`;
                             },
-                            borderColor: '#fff',
-                            borderWidth: 2
+                            borderWidth: 0
                         },
                         emphasis: {
                             itemStyle: {
@@ -1998,8 +2091,7 @@ def get_javascript_functions():
                                 const alpha = 0.6 + intensity * 0.4; // 0.6 to 1.0
                                 return `rgba(${baseR}, ${baseG}, ${baseB}, ${alpha})`;
                             },
-                            borderColor: '#fff',
-                            borderWidth: 2
+                            borderWidth: 0
                         },
                         emphasis: {
                             itemStyle: {
@@ -2030,8 +2122,7 @@ def get_javascript_functions():
                                 const alpha = 0.6 + intensity * 0.4; // 0.6 to 1.0
                                 return `rgba(${baseR}, ${baseG}, ${baseB}, ${alpha})`;
                             },
-                            borderColor: '#fff',
-                            borderWidth: 2
+                            borderWidth: 0
                         },
                         emphasis: {
                             itemStyle: {
@@ -2084,14 +2175,15 @@ def get_javascript_functions():
             
             const modal = document.createElement('div');
             modal.style.cssText = `
-                background: white;
+                background: #2d2d2d;
+                color: #e0e0e0;
                 padding: 30px;
                 border-radius: 10px;
                 max-width: 500px;
                 width: 90%;
                 max-height: 80vh;
                 overflow-y: auto;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             `;
             
             // Find the full musician data
@@ -2099,33 +2191,33 @@ def get_javascript_functions():
             
             modal.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2 style="margin: 0; color: #333;">${musicianData.musician}</h2>
-                    <button id="closeModal" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">&times;</button>
+                    <h2 style="margin: 0; color: #ffffff;">${musicianData.musician}</h2>
+                    <button id="closeModal" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #b0b0b0;">&times;</button>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                    <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 5px;">
-                        <div style="font-size: 24px; font-weight: bold; color: #e74c3c;">${musicianData.total}</div>
-                        <div style="color: #666;">Total Records</div>
+                    <div style="text-align: center; padding: 15px; background: #3a3a3a; border-radius: 5px;">
+                        <div style="font-size: 24px; font-weight: bold; color: #ff6b6b;">${musicianData.total}</div>
+                        <div style="color: #b0b0b0;">Total Records</div>
                     </div>
-                    <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 5px;">
-                        <div style="font-size: 24px; font-weight: bold; color: #f39c12;">${(musicianData.sessionRatio * 100).toFixed(1)}%</div>
-                        <div style="color: #666;">Session Work</div>
+                    <div style="text-align: center; padding: 15px; background: #3a3a3a; border-radius: 5px;">
+                        <div style="font-size: 24px; font-weight: bold; color: #ffa726;">${(musicianData.sessionRatio * 100).toFixed(1)}%</div>
+                        <div style="color: #b0b0b0;">Session Work</div>
                     </div>
-                    <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 5px;">
-                        <div style="font-size: 24px; font-weight: bold; color: #27ae60;">${musicianData.x}</div>
-                        <div style="color: #666;">Main Artist</div>
+                    <div style="text-align: center; padding: 15px; background: #3a3a3a; border-radius: 5px;">
+                        <div style="font-size: 24px; font-weight: bold; color: #66bb6a;">${musicianData.x}</div>
+                        <div style="color: #b0b0b0;">Main Artist</div>
                     </div>
-                    <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 5px;">
-                        <div style="font-size: 24px; font-weight: bold; color: #3498db;">${musicianData.y}</div>
-                        <div style="color: #666;">Session Work</div>
+                    <div style="text-align: center; padding: 15px; background: #3a3a3a; border-radius: 5px;">
+                        <div style="font-size: 24px; font-weight: bold; color: #42a5f5;">${musicianData.y}</div>
+                        <div style="color: #b0b0b0;">Session Work</div>
                     </div>
                 </div>
                 ${fullMusicianData && fullMusicianData.records ? `
                     <div>
                         <h3 style="margin-bottom: 10px;">Albums (${fullMusicianData.records.length})</h3>
-                        <div style="max-height: 200px; overflow-y: auto; background: #f8f9fa; padding: 10px; border-radius: 5px;">
-                            ${fullMusicianData.records.slice(0, 20).map(record => `<div style="margin-bottom: 5px;">• ${record}</div>`).join('')}
-                            ${fullMusicianData.records.length > 20 ? `<div style="margin-top: 10px; font-style: italic; color: #666;">... and ${fullMusicianData.records.length - 20} more albums</div>` : ''}
+                        <div style="max-height: 200px; overflow-y: auto; background: #3a3a3a; padding: 10px; border-radius: 5px;">
+                            ${fullMusicianData.records.slice(0, 20).map(record => `<div style="margin-bottom: 5px; color: #e0e0e0;">• ${record}</div>`).join('')}
+                            ${fullMusicianData.records.length > 20 ? `<div style="margin-top: 10px; font-style: italic; color: #b0b0b0;">... and ${fullMusicianData.records.length - 20} more albums</div>` : ''}
                         </div>
                     </div>
                 ` : ''}
