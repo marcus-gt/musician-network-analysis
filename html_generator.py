@@ -1619,6 +1619,7 @@ def get_javascript_functions():
         }
         
         function updateTopMusiciansTab() {
+            console.log(`updateTopMusiciansTab called. musicianStatsData has ${musicianStatsData.length} musicians`);
             const filteredStats = calculateFilteredMusicianStats();
             const topMusicians = filteredStats.sort((a, b) => b.total_records - a.total_records).slice(0, 15);
             
@@ -1749,10 +1750,95 @@ def get_javascript_functions():
                 window.sessionScatterChart.dispose();
             }
             
-            // Categorize musicians for better visualization
-            const pureSessionMusicians = filteredStats.filter(m => m.as_main_artist === 0 && m.as_session_musician > 0);
-            const balancedMusicians = filteredStats.filter(m => m.as_main_artist > 0 && m.as_session_musician > 0);
-            const pureMainArtists = filteredStats.filter(m => m.as_main_artist > 0 && m.as_session_musician === 0);
+            // Apply filters directly to ALL musician data (bypass network node limitations)
+            let allFilteredStats = [...musicianStatsData];
+            console.log(`Starting with ${allFilteredStats.length} total musicians from musicianStatsData`);
+            
+            // Apply role filtering
+            if (selectedRoles.size < window.allRoles.length && selectedRoles.size > 0) {
+                const musiciansWithSelectedRoles = new Set();
+                fullNetworkData.links.forEach(link => {
+                    if (link.roles && link.roles.some(role => selectedRoles.has(role))) {
+                        musiciansWithSelectedRoles.add(link.source);
+                        musiciansWithSelectedRoles.add(link.target);
+                    }
+                });
+                allFilteredStats = allFilteredStats.filter(m => musiciansWithSelectedRoles.has(m.musician));
+            }
+            
+            // Apply custom filters
+            if (customFilters.length > 0) {
+                const activeCustomFilters = customFilters.filter(filter => 
+                    filter.column && 
+                    filter.selectedValues.size > 0 && 
+                    filter.selectedValues.size < (customFilterData[filter.column] ? customFilterData[filter.column].length : 0)
+                );
+                
+                if (activeCustomFilters.length > 0) {
+                    allFilteredStats = allFilteredStats.filter(musician => {
+                        return activeCustomFilters.every(filter => {
+                            // Check if musician appears in any record that matches the filter
+                            if (!musician.records) return false;
+                            
+                            return musician.records.some(record => {
+                                // Get all the data for this record from all columns
+                                let recordMatches = false;
+                                
+                                // Search through the custom filter data to find this record
+                                Object.keys(customFilterData).forEach(dataKey => {
+                                    if (recordMatches) return; // Already found a match
+                                    
+                                    const columnData = customFilterData[dataKey];
+                                    if (Array.isArray(columnData)) {
+                                        columnData.forEach((rowData, index) => {
+                                            if (recordMatches) return; // Already found a match
+                                            
+                                            // Check if this row contains our record (album)
+                                            if (rowData && typeof rowData === 'object') {
+                                                const albumField = rowData['Artist'] + ' - ' + rowData['Album'];
+                                                if (albumField === record || rowData['Album'] === record.split(' - ')[1]) {
+                                                    // This is our record, check if it matches the filter
+                                                    const filterColumnData = rowData[filter.column];
+                                                    if (filterColumnData) {
+                                                        if (typeof filterColumnData === 'string' && filterColumnData.includes(',')) {
+                                                            // Handle comma-separated values
+                                                            const parts = filterColumnData.split(',').map(p => p.trim());
+                                                            recordMatches = parts.some(part => filter.selectedValues.has(part));
+                                                        } else {
+                                                            recordMatches = filter.selectedValues.has(String(filterColumnData));
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        });
+                                    }
+                                });
+                                
+                                return recordMatches;
+                            });
+                        });
+                    });
+                }
+            }
+            
+            console.log(`Total musicians in scatter plot: ${allFilteredStats.length} (direct filtering applied)`);
+            
+            const pureSessionMusicians = allFilteredStats.filter(m => m.as_main_artist === 0 && m.as_session_musician > 0);
+            const balancedMusicians = allFilteredStats.filter(m => m.as_main_artist > 0 && m.as_session_musician > 0);
+            const pureMainArtists = allFilteredStats.filter(m => m.as_main_artist > 0 && m.as_session_musician === 0);
+            
+            console.log(`Categories breakdown: Pure Session: ${pureSessionMusicians.length}, Balanced: ${balancedMusicians.length}, Pure Main: ${pureMainArtists.length}`);
+            
+            // Debug: Check the X,Y distribution
+            console.log('Sample Pure Session Musicians X,Y values:');
+            pureSessionMusicians.slice(0, 5).forEach(m => {
+                console.log(`  ${m.musician}: (${m.as_main_artist}, ${m.as_session_musician})`);
+            });
+            
+            console.log('Sample Balanced Musicians X,Y values:');
+            balancedMusicians.slice(0, 5).forEach(m => {
+                console.log(`  ${m.musician}: (${m.as_main_artist}, ${m.as_session_musician})`);
+            });
             
             // Helper function to get size based on total records
             function getSizeByTotal(total, maxTotal) {
@@ -1767,7 +1853,7 @@ def get_javascript_functions():
                 return Math.sqrt(total / Math.max(maxTotal, 1)); // Use square root for better distribution
             }
             
-            const maxTotal = Math.max(...filteredStats.map(m => m.total_records));
+            const maxTotal = Math.max(...allFilteredStats.map(m => m.total_records));
             
             window.sessionScatterChart = echarts.init(chartContainer);
             
@@ -1795,7 +1881,26 @@ def get_javascript_functions():
                     }
                 },
                 legend: {
-                    data: ['Pure Session Musicians', 'Balanced Artists', 'Pure Main Artists'],
+                    data: [
+                        {
+                            name: 'Pure Session Musicians',
+                            itemStyle: {
+                                color: 'rgba(231, 76, 60, 0.8)' // Red to match the series
+                            }
+                        },
+                        {
+                            name: 'Balanced Artists',
+                            itemStyle: {
+                                color: 'rgba(243, 156, 18, 0.8)' // Orange to match the series
+                            }
+                        },
+                        {
+                            name: 'Pure Main Artists',
+                            itemStyle: {
+                                color: 'rgba(39, 174, 96, 0.8)' // Green to match the series
+                            }
+                        }
+                    ],
                     top: '8%',
                     left: 'center',
                     textStyle: {
@@ -1842,9 +1947,9 @@ def get_javascript_functions():
                     {
                         name: 'Pure Session Musicians',
                         type: 'scatter',
-                        data: pureSessionMusicians.map(m => [
-                            m.as_main_artist,
-                            m.as_session_musician,
+                        data: pureSessionMusicians.map((m, index) => [
+                            Math.max(0, m.as_main_artist + (Math.random() - 0.5) * 0.3), // Add jitter but keep >= 0
+                            Math.max(0, m.as_session_musician + (Math.random() - 0.5) * 0.3),
                             getSizeByTotal(m.total_records, maxTotal),
                             m.musician,
                             m.total_records,
@@ -1875,8 +1980,8 @@ def get_javascript_functions():
                         name: 'Balanced Artists',
                         type: 'scatter',
                         data: balancedMusicians.map(m => [
-                            m.as_main_artist,
-                            m.as_session_musician,
+                            Math.max(0, m.as_main_artist + (Math.random() - 0.5) * 0.3), // Add jitter but keep >= 0
+                            Math.max(0, m.as_session_musician + (Math.random() - 0.5) * 0.3),
                             getSizeByTotal(m.total_records, maxTotal),
                             m.musician,
                             m.total_records,
@@ -1907,8 +2012,8 @@ def get_javascript_functions():
                         name: 'Pure Main Artists',
                         type: 'scatter',
                         data: pureMainArtists.map(m => [
-                            m.as_main_artist,
-                            m.as_session_musician,
+                            Math.max(0, m.as_main_artist + (Math.random() - 0.5) * 0.3), // Add jitter but keep >= 0
+                            Math.max(0, m.as_session_musician + (Math.random() - 0.5) * 0.3),
                             getSizeByTotal(m.total_records, maxTotal),
                             m.musician,
                             m.total_records,
